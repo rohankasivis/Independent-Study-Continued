@@ -1,0 +1,41 @@
+upon init 
+{
+  adjacent := {};
+  local_mass := O;
+  aggregate_mass := O;
+  sent_mass := [];
+  received_mass := [];
+  levels := [];
+  broadcast := false;
+}
+
+upon receive New(j) 
+{
+  send(j, Status(0, 0));
+  adjacent := adjacent cup { j };
+  sent_mass := sent_mass[j |-> O];
+  received_mass := received_mass[j |-> O];
+}
+
+upon receive Fail(j) /\ sent_mass(j) = m /\ received_mass(j) = m' 
+{
+  adjacent := adjacent \ { j };
+  aggregate_mass := aggregate_mass + m - m';
+}
+
+upon receive Aggregate(j, m) /\ received_mass(j) = m' 
+{
+  aggregate_mass := aggregate_mass + m;
+  received_mass := received_mass[j |-> m' + m];  
+}
+
+upon receive Local(m) 
+{
+  aggregate_mass := aggregate_mass + m - local_mass;
+  local_mass := m;
+}
+
+upon receive Status(j, lvo) 
+{
+  skip;
+}
