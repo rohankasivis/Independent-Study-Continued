@@ -6,7 +6,57 @@ import scala.concurrent.duration.Duration
 
 class NonRoot extends NodeActors
 {
-  override def postStop() = {
+
+  // added by Karl
+  def parent(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[ActorRef] =
+  {
+    par(nodeActors, levels) match
+    {
+      case Some((parentRef, _)) => Some(parentRef)
+      case None => None
+    }
+  }
+
+  // added by Karl
+  def level(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Int] =
+  {
+    par(nodeActors, levels) match
+    {
+      case Some((_, parentLevel)) => Some(parentLevel + 1)
+      case None => None
+    }
+  }
+
+  // added by Karl
+  def par(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Tuple2[ActorRef, Int]] =
+  {
+    if (nodeActors.isEmpty)
+      return None
+
+    val currRef: ActorRef = nodeActors.head
+
+    par(nodeActors.tail, levels) match
+    {
+      case Some((parRef, parLevel)) =>
+        levels.get(currRef) match
+        {
+          case Some(currLevel) =>
+            if (currLevel < parLevel)
+              Some((currRef, currLevel))
+            else
+              Some((parRef, parLevel))
+          case None =>
+            Some((parRef, parLevel))
+        }
+      case None =>
+        levels.get(currRef) match
+        {
+          case Some(currLevel) =>
+            Some((currRef, currLevel))
+          case None =>
+            None
+        }
+    }
 
   }
 
@@ -21,58 +71,6 @@ class NonRoot extends NodeActors
   {
     adjacent -= nodeActors        // remove an element from the nodeactors set
     // remove the element corresponding to the nodeactor from level map
-  }
-
-  def parent(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[ActorRef] =
-  {
-    par(nodeActors, levels) match
-    {
-      case Some((parentRef, _)) => Some(parentRef)
-      case None => None
-    }
-  }
-
-  def level(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Int] =
-  {
-    par(nodeActors, levels) match
-    {
-      case Some((_, parentLevel)) => Some(parentLevel + 1)
-      case None => None
-    }
-  }
-
-  def par(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Tuple2[ActorRef, Int]] =
-  {
-    nodeActors.isEmpty match
-    {
-      case false =>
-      levels.isEmpty match {
-        case false =>
-          val currRef: ActorRef = nodeActors.head
-          par (nodeActors.tail, levels) match {
-          case Some ((parRef, parLevel) ) =>
-          levels.get (currRef) match {
-          case Some (currLevel) =>
-          if (currLevel < parLevel)
-          Some ((currRef, currLevel) )
-          else
-          Some ((parRef, parLevel) )
-          case None =>
-          Some ((parRef, parLevel) )
-          }
-          case None =>
-          levels.get (currRef) match {
-          case Some (currLevel) =>
-          Some ((currRef, currLevel) )
-          case None =>
-          None
-           }
-           }
-        case true => None
-      }
-      case true => None
-
-    }
   }
 
   def send(nodeActors:Set[ActorRef], value:Status)
