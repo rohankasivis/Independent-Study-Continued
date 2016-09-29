@@ -17,29 +17,11 @@ class Root extends NodeActors
     adjacent -= nodeActors
   }
 
-  def level(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Int] =
-  {
-    // not implemented here - no need to, as this is the root with default level 0
-    val ret:Option[Int] = Some(0)
-    return ret
-  }
-
-  def parent(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[ActorRef] =
-  {
-    // not implemented here - no need to, as the root does not contain any parents
-    null
-  }
-
   def send(nodeActors:ActorRef, value:Status)
   {
     // in this case, we do not have to check for option, as 0 will always be passed in
 
     nodeActors ! value
-  }
-
-  def broadcast_var()
-  {
-    // not implemented here
   }
 
   def receive: Receive = {

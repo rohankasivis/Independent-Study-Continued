@@ -97,11 +97,6 @@ class NonRoot extends NodeActors
     }
   }
 
-  def send(arg1: ActorRef, status: Status) =
-  {
-    arg1 ! status
-  }
-
   // code for the new message class
   def handle_new(arg1:ActorRef) =
   {
@@ -233,44 +228,35 @@ class NonRoot extends NodeActors
   }
 
   def receive: Receive = {
-    case New(arg1) => val result = {
+    case New(arg1) => 
       handle_new(arg1)
-    }
 
-    case Fail(arg1) => val result = {
+    case Fail(arg1) =>
       handle_fail(arg1)
-    }
 
-    case Aggregate(arg1, arg2) => val result = {
+    case Aggregate(arg1, arg2) =>
       handle_agg_message(arg1, arg2)
-    }
 
-    case Drop(arg1, arg2) => val result = {
+    case Drop(arg1, arg2) =>
       handle_drop(arg1, arg2)
-    }
 
-    case Local(arg1) => val result = {
+    case Local(arg1) =>
       handle_local(arg1)
-    }
-    case SendAggregate() => {
+
+    case SendAggregate() =>
       handle_aggregate()
-    }
 
-    case sendBroadcast() => {
+    case sendBroadcast() =>
       broadcast_var()
-    }
 
-    case Status(arg1, arg2) => val result = {
+    case Status(arg1, arg2) =>
       handle_status(arg1, arg2)
-    }
 
     case sendToSelf() =>
-    {
-      if(!hasStartedSelfSend)
-      {
+      if(!hasStartedSelfSend) {
         deliverToSelf = context.system.scheduler.schedule(Duration(500, "millis"), Duration(1000, "millis"), self, SendAggregate)
         hasStartedSelfSend = true
       }
-    }
   }
+
 }

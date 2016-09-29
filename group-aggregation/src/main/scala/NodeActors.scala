@@ -21,15 +21,7 @@ abstract class NodeActors extends Actor
   protected var aggregate_mass:Int = 0
   protected var adjacent:Set[ActorRef] = Set.empty
   protected var broadcast:Boolean = false
+
   val system = ActorSystem("NodeActors")
 
-  def new_entry(nodeActors: ActorRef)
-
-  def remove_entry(nodeActors:ActorRef)
-
-  def level(nodeActors:Set[ActorRef], level:Map[ActorRef, Int]): Option[Int]
-
-  def parent(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[ActorRef]
-
-  def broadcast_var()
 }
