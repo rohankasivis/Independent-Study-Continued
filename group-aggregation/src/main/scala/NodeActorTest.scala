@@ -49,31 +49,10 @@ object NodeActorTest extends App
   node_two ! Local(10)
   node_three ! Local(7)
 
-  import system.dispatcher
-  val cancellable =
-    system.scheduler.schedule(
-      0 milliseconds,
-      1 second,
-      node_one,
-      SendAggregate())
-  val canc_two =
-    system.scheduler.schedule(
-      0 milliseconds,
-      1 second,
-      node_two,
-      SendAggregate())
-  val broad_two =
-    system.scheduler.schedule(
-      0 milliseconds,
-      1 second,
-      node_three,
-      SendAggregate())
-
-  cancellable.cancel()
-  canc_two.cancel()
-  //  broad_one.cancel()
-  broad_two.cancel()
-  // remove node two
+  node_one ! sendToSelf
+  node_one ! sendToSelf
+  node_two ! sendToSelf
+  node_three ! sendToSelf
 
   node_one ! sendBroadcast()
   node_two ! sendBroadcast()

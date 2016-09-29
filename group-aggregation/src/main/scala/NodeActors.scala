@@ -9,6 +9,7 @@ case class Status(arg1:ActorRef, arg2:Option[Int])
 case class Drop(arg1:ActorRef, arg2:Int)
 case class SendAggregate()
 case class sendBroadcast()
+case class sendToSelf()
 
 // this is the class which the root/non-root will extend
 abstract class NodeActors extends Actor

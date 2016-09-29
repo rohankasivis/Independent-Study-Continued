@@ -1,11 +1,20 @@
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, Cancellable}
 
 import scala.concurrent.duration.Duration
 
 class NonRoot extends NodeActors
 {
+  import context.dispatcher
+  // code for ensuring sending to oneself
+  private var hasStartedSelfSend = false
+  private var deliverToSelf: Cancellable = null
+
+  override def postStop() = {
+    if(hasStartedSelfSend)
+      deliverToSelf.cancel()
+  }
 
   // added by Karl
   def parent(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[ActorRef] =
@@ -253,6 +262,15 @@ class NonRoot extends NodeActors
 
     case Status(arg1, arg2) => val result = {
       handle_status(arg1, arg2)
+    }
+
+    case sendToSelf() =>
+    {
+      if(!hasStartedSelfSend)
+      {
+        deliverToSelf = context.system.scheduler.schedule(Duration(500, "millis"), Duration(1000, "millis"), self, SendAggregate)
+        hasStartedSelfSend = true
+      }
     }
   }
 }
