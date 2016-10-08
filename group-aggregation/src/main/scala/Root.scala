@@ -4,6 +4,7 @@ class Root extends NodeActors
 {
   // these are all of the private variables that are used
   // a new entry is added.. simply instantiate the private variables accordingly here
+
   def new_entry(nodeActors:ActorRef)
   {
     adjacent += nodeActors
@@ -17,12 +18,44 @@ class Root extends NodeActors
     adjacent -= nodeActors
   }
 
+  def level(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Int] =
+  {
+    // not implemented here - no need to, as this is the root with default level 0
+    val ret:Option[Int] = Some(0)
+    return ret
+  }
+
+  def parent(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[ActorRef] =
+  {
+    // not implemented here - no need to, as the root does not contain any parents
+    null
+  }
+
   def send(nodeActors:ActorRef, value:Status)
   {
     // in this case, we do not have to check for option, as 0 will always be passed in
 
     nodeActors ! value
   }
+
+  def broadcast_var()
+  {
+    // not implemented here
+  }
+
+  def getAdjacent:Set[ActorRef]={
+    adjacent
+  }
+
+  def getLevels: Map[ActorRef, Int] =levels
+
+  def getSentMass:Map[ActorRef, Int]=sent_mass
+
+  def getBroadCast:Boolean=broadcast
+
+  def getAggregateMass:Int=aggregate_mass
+
+  def getLocalMass:Int=local_mass
 
   def receive: Receive = {
     case New(arg1) => val result = {

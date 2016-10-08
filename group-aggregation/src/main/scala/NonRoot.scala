@@ -1,6 +1,4 @@
-import java.util.concurrent.TimeUnit
-
-import akka.actor.{ActorRef, ActorSystem, Cancellable}
+import akka.actor.{ActorRef, Cancellable}
 
 import scala.concurrent.duration.Duration
 
@@ -97,6 +95,11 @@ class NonRoot extends NodeActors
     }
   }
 
+  def send(arg1: ActorRef, status: Status) =
+  {
+    arg1 ! status
+  }
+
   // code for the new message class
   def handle_new(arg1:ActorRef) =
   {
@@ -115,6 +118,29 @@ class NonRoot extends NodeActors
     //      System.out.println ("Finish Calling in NonRoot Case New :" + self.toString () )
     sender ! true
   }
+
+  def getAdjacent:Set[ActorRef]={
+    adjacent
+  }
+
+  /*
+    protected var sent_mass:Map[ActorRef, Int] = Map.empty
+  protected var received_mass:Map[ActorRef, Int] = Map.empty
+  protected var local_mass:Int = 0
+  protected var aggregate_mass:Int = 0
+  protected var adjacent:Set[ActorRef] = Set.empty
+  protected var broadcast:Boolean = false
+   */
+
+  def getLevels:Map[ActorRef, Int]=levels
+
+  def getSentMass:Map[ActorRef, Int]=sent_mass
+
+  def getBroadCast:Boolean=broadcast
+
+  def getAggregateMass:Int=aggregate_mass
+
+  def getLocalMass:Int=local_mass
 
   // code to handle fail code
   def handle_fail(arg1:ActorRef) =
@@ -228,35 +254,44 @@ class NonRoot extends NodeActors
   }
 
   def receive: Receive = {
-    case New(arg1) => 
+    case New(arg1) => val result = {
       handle_new(arg1)
+    }
 
-    case Fail(arg1) =>
+    case Fail(arg1) => val result = {
       handle_fail(arg1)
+    }
 
-    case Aggregate(arg1, arg2) =>
+    case Aggregate(arg1, arg2) => val result = {
       handle_agg_message(arg1, arg2)
+    }
 
-    case Drop(arg1, arg2) =>
+    case Drop(arg1, arg2) => val result = {
       handle_drop(arg1, arg2)
+    }
 
-    case Local(arg1) =>
+    case Local(arg1) => val result = {
       handle_local(arg1)
-
-    case SendAggregate() =>
+    }
+    case SendAggregate() => {
       handle_aggregate()
+    }
 
-    case sendBroadcast() =>
+    case sendBroadcast() => {
       broadcast_var()
+    }
 
-    case Status(arg1, arg2) =>
+    case Status(arg1, arg2) => val result = {
       handle_status(arg1, arg2)
+    }
 
     case sendToSelf() =>
-      if(!hasStartedSelfSend) {
+    {
+      if(!hasStartedSelfSend)
+      {
         deliverToSelf = context.system.scheduler.schedule(Duration(500, "millis"), Duration(1000, "millis"), self, SendAggregate)
         hasStartedSelfSend = true
       }
+    }
   }
-
 }
