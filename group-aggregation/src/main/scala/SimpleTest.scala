@@ -161,10 +161,9 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       node_three ! Local(7)
       underlyingthreenode.getLocalMass must equal(7)
 
-      node_one ! sendToSelf
-      node_one ! sendToSelf
-      node_two ! sendToSelf
-      node_three ! sendToSelf
+      node_one ! sendToSelf()
+      node_two ! sendToSelf()
+      node_three ! sendToSelf()
 
       node_one ! sendBroadcast()
       node_two ! sendBroadcast()
