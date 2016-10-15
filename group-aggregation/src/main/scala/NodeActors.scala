@@ -24,25 +24,16 @@ abstract class NodeActors extends Actor
 
   val system = ActorSystem("NodeActors")
 
-  def new_entry(nodeActors: ActorRef)
+  def getLevel: Option[Int]
+  def getParent: Option[ActorRef]
 
-  def remove_entry(nodeActors:ActorRef)
+  def getAggregateMass = aggregate_mass
+  def getLocalMass = local_mass
+  def getBroadcast = broadcast
 
-  def level(nodeActors:Set[ActorRef], level:Map[ActorRef, Int]): Option[Int]
+  def isAdjacentTo(a: ActorRef) = adjacent.contains(a)
+  def getLevelFor(a: ActorRef) = levels.get(a)
+  def getSentMassTo(a: ActorRef) = sent_mass.get(a)
+  def getReceivedMassFrom(a: ActorRef) = received_mass.get(a)
 
-  def parent(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[ActorRef]
-
-  def broadcast_var()
-
-  def getAdjacent:Set[ActorRef]
-
-  def getLevels:Map[ActorRef, Int]
-
-  def getSentMass:Map[ActorRef, Int]
-
-  def getBroadCast:Boolean
-
-  def getAggregateMass:Int
-
-  def getLocalMass:Int
 }

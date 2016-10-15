@@ -27,15 +27,15 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       actorRef ! New(node_one)
 
       val underLyingRootActor=actorRef.underlyingActor
-      underLyingRootActor.getAdjacent.contains(node_one)
+      underLyingRootActor.isAdjacentTo(node_one)
       expectMsg(true)
       // check the properties of node one
       val underLyingNodeOneActor =node_one.underlyingActor
-      underLyingNodeOneActor.getBroadCast must equal(true)
-      underLyingNodeOneActor.getAdjacent.contains(actorRef)
+      underLyingNodeOneActor.getBroadcast must equal(true)
+      underLyingNodeOneActor.isAdjacentTo(actorRef)
       underLyingNodeOneActor.getLocalMass must equal(0)
-      underLyingNodeOneActor.getLevels.get(actorRef) must equal(Option(0))
-      underLyingNodeOneActor.parent(underLyingNodeOneActor.getAdjacent, underLyingNodeOneActor.getLevels) must equal(Option(actorRef))
+      underLyingNodeOneActor.getLevelFor(actorRef) must equal(Option(0))
+      underLyingNodeOneActor.getParent must equal(Option(actorRef))
 
       // pass a value to Root Actor
       actorRef ! Local(2)
@@ -55,7 +55,7 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
 
       // send root node to child
       node_one ! New(actorRef)
-      underLyingNodeOneActor.getSentMass(actorRef) must equal(0)
+      underLyingNodeOneActor.getSentMassTo(actorRef) must equal(Some(0))
       node_one ! SendAggregate()
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(7)
@@ -95,14 +95,14 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
 
       val originalunderlyingActor = actorRef.underlyingActor
       within(200 milliseconds) {
-        originalunderlyingActor.getAdjacent.contains(node_one)
+        originalunderlyingActor.isAdjacentTo(node_one)
         expectMsg(true)
       }
 
       actorRef ! New(node_two)
 
       within(200 milliseconds) {
-        originalunderlyingActor.getAdjacent.contains(node_two)
+        originalunderlyingActor.isAdjacentTo(node_two)
         expectMsg(true)
       }
 
@@ -113,38 +113,38 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       node_one ! New(actorRef)
 
       within(200 milliseconds) {
-        underlyingonenode.getAdjacent.contains(actorRef)
+        underlyingonenode.isAdjacentTo(actorRef)
         expectMsg(true)
       }
 
       node_one ! New(node_three)
       // val result_onethree = Await.ready(future_onethree, timeout.duration)
       within(200 milliseconds) {
-        underlyingonenode.getAdjacent.contains(node_three)
+        underlyingonenode.isAdjacentTo(node_three)
         expectMsg(true)
       }
 
       node_two ! New(actorRef)
       within(200 milliseconds) {
-        underlyingtwonode.getAdjacent.contains(actorRef)
+        underlyingtwonode.isAdjacentTo(actorRef)
         expectMsg(true)
       }
 
       node_two ! New(node_two)
       within(200 milliseconds) {
-        underlyingtwonode.getAdjacent.contains(node_three)
+        underlyingtwonode.isAdjacentTo(node_three)
         expectMsg(true)
       }
 
       node_three ! New(node_one)
       within(200 milliseconds) {
-        underlyingthreenode.getAdjacent.contains(node_one)
+        underlyingthreenode.isAdjacentTo(node_one)
         expectMsg(true)
       }
 
       node_three ! New(node_two)
       within(200 milliseconds) {
-        underlyingthreenode.getAdjacent.contains(node_two)
+        underlyingthreenode.isAdjacentTo(node_two)
         expectMsg(true)
       }
 

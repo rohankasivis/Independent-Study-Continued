@@ -15,7 +15,7 @@ class NonRoot extends NodeActors
   }
 
   // added by Karl
-  def parent(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[ActorRef] =
+  private def parent(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[ActorRef] =
   {
     par(nodeActors, levels) match
     {
@@ -25,7 +25,7 @@ class NonRoot extends NodeActors
   }
 
   // added by Karl
-  def level(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Int] =
+  private def level(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Int] =
   {
     par(nodeActors, levels) match
     {
@@ -35,7 +35,13 @@ class NonRoot extends NodeActors
   }
 
   // added by Karl
-  def par(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Tuple2[ActorRef, Int]] =
+  def getLevel = level(adjacent, levels)
+
+  // added by Karl
+  def getParent = parent(adjacent, levels)
+
+  // added by Karl
+  private def par(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Tuple2[ActorRef, Int]] =
   {
     if (nodeActors.isEmpty)
       return None
@@ -118,29 +124,6 @@ class NonRoot extends NodeActors
     //      System.out.println ("Finish Calling in NonRoot Case New :" + self.toString () )
     sender ! true
   }
-
-  def getAdjacent:Set[ActorRef]={
-    adjacent
-  }
-
-  /*
-    protected var sent_mass:Map[ActorRef, Int] = Map.empty
-  protected var received_mass:Map[ActorRef, Int] = Map.empty
-  protected var local_mass:Int = 0
-  protected var aggregate_mass:Int = 0
-  protected var adjacent:Set[ActorRef] = Set.empty
-  protected var broadcast:Boolean = false
-   */
-
-  def getLevels:Map[ActorRef, Int]=levels
-
-  def getSentMass:Map[ActorRef, Int]=sent_mass
-
-  def getBroadCast:Boolean=broadcast
-
-  def getAggregateMass:Int=aggregate_mass
-
-  def getLocalMass:Int=local_mass
 
   // code to handle fail code
   def handle_fail(arg1:ActorRef) =
