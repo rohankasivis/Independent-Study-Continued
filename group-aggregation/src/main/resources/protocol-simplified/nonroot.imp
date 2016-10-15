@@ -3,8 +3,7 @@ upon init
   adjacent := {};
   local_mass := O;
   aggregate_mass := O;
-  sent_mass := [];
-  received_mass := [];
+  balance := [];
   levels := [];
   broadcast := false;
 }
@@ -15,30 +14,24 @@ upon receive New(j)
     send(j, Status(i, level(adjacent, levels)));
   }
   adjacent := adjacent cup { j };
-  sent_mass := sent_mass[j |-> O];
-  received_mass := received_mass[j |-> O];  
+  balance := balance[j |-> O];
 }
 
-upon receive Fail(j) /\ sent_mass(j) = m /\ received_mass(j) = m' 
+upon receive Fail(j) /\ balance(j) = m
 {
   if level(adjacent, levels) =/= level(adjacent \ { j }, levels \ { j }) {
     broadcast := true;
   }
   adjacent := adjacent \ { j };
   levels := levels \ { j };
-  aggregate_mass := aggregate_mass + m - m';  
+  aggregate_mass := aggregate_mass + m;
+  balance := balance \ { j };
 }
 
-upon receive Aggregate(j, m) /\ received_mass(j) = m' 
+upon receive Aggregate(j, m) /\ balance(j) = m' 
 {
   aggregate_mass := aggregate_mass + m;
-  received_mass := received_mass[j |-> m' + m];
-}
-
-upon receive Drop(j, m) /\ sent_mass(j) = m' 
-{
-  aggregate_mass := aggregate_mass + m;
-  sent_mass := sent_mass[j |-> m' - m];
+  balance := balance[j |-> m' - m];
 }
 
 upon receive Local(m) 
@@ -69,9 +62,9 @@ upon broadcast = true
   broadcast := false;
 }
 
-upon aggregate_mass =/= O /\ parent(adjacent, levels) = j /\ sent_mass(j) = m 
+upon aggregate_mass =/= O /\ parent(adjacent, levels) = j /\ balance(j) = m 
 {
   send(j, Aggregate(i, aggregate_mass));
-  sent_mass := sent_mass[j |-> m + aggregate_mass];
+  balance := balance[j |-> m + aggregate_mass];
   aggregate_mass := O;
 }

@@ -1,0 +1,73 @@
+upon init 
+{
+  adjacent := {};
+  local_mass := O;
+  aggregate_mass := O;
+  sent_mass := [];
+  received_mass := [];
+  levels := [];
+  broadcast := false;
+}
+
+upon receive New(j) 
+{
+  if level(adjacent, levels) =/= _|_ {
+    send(j, Status(i, level(adjacent, levels)));
+  }
+  adjacent := adjacent cup { j };
+  sent_mass := sent_mass[j |-> O];
+  received_mass := received_mass[j |-> O];  
+}
+
+upon receive Fail(j) /\ sent_mass(j) = m /\ received_mass(j) = m' 
+{
+  if level(adjacent, levels) =/= level(adjacent \ { j }, levels \ { j }) {
+    broadcast := true;
+  }
+  adjacent := adjacent \ { j };
+  levels := levels \ { j };
+  aggregate_mass := aggregate_mass + m - m';  
+  sent_mass := sent_mass \ { j };
+  received_mass := sent_mass \ { j };
+}
+
+upon receive Aggregate(j, m) /\ received_mass(j) = m' 
+{
+  aggregate_mass := aggregate_mass + m;
+  received_mass := received_mass[j |-> m' + m];
+}
+
+upon receive Local(m) 
+{
+  aggregate_mass := aggregate_mass + m - local_mass;
+  local_mass := m;
+}
+
+upon receive Status(j, _|_) 
+{
+  if level(adjacent , levels) =/= level(adjacent , levels \ { j }) {
+    broadcast := true;
+  }
+  levels := levels \ { j };
+}
+
+upon receive Status(j, lv) 
+{
+  if level(adjacent, levels) =/= level(adjacent, levels[j |-> lv]) {
+    broadcast := true;
+  }
+  levels := levels[j |-> lv];
+}
+
+upon broadcast = true
+{
+  send(adjacent, Status(i, level(adjacent, levels)));
+  broadcast := false;
+}
+
+upon aggregate_mass =/= O /\ parent(adjacent, levels) = j /\ sent_mass(j) = m 
+{
+  send(j, Aggregate(i, aggregate_mass));
+  sent_mass := sent_mass[j |-> m + aggregate_mass];
+  aggregate_mass := O;
+}

@@ -21,6 +21,8 @@ upon receive Fail(j) /\ sent_mass(j) = m /\ received_mass(j) = m'
 {
   adjacent := adjacent \ { j };
   aggregate_mass := aggregate_mass + m - m';
+  sent_mass := sent_mass \ { j };
+  received_mass := received_mass \ { j };
 }
 
 upon receive Aggregate(j, m) /\ received_mass(j) = m' 
