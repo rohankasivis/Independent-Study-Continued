@@ -1,81 +1,17 @@
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import org.scalatest.{Tag, WordSpecLike}
-import org.scalatest.matchers.MustMatchers
-import akka.pattern.ask
 import akka.util.Timeout
+import org.scalatest.WordSpecLike
+import org.scalatest.matchers.MustMatchers
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class SimpleTest extends TestKit(ActorSystem("testSystem"))
+class NonRootTest extends TestKit(ActorSystem("testSystem"))
   with WordSpecLike
   with MustMatchers
-  with ImplicitSender {
-
-  //override def registerIgnoredTest(testText: String, testTags: Tag*)(testFun: => Any)(implicit pos: Any): Unit = ???
-
-  "A Root actor" must {
-    // Creation of the TestActorRef
-    val actorRef = TestActorRef[Root]
-    var neighbors : Map[ActorRef, Set[ActorRef]] = Map.empty
-
-    "receive messages" in {
-      // This call is synchronous. The actor receive() method will be called in the current thread
-      val node_one = TestActorRef[NonRoot]
-
-      actorRef ! New(node_one)
-
-      val underLyingRootActor=actorRef.underlyingActor
-      underLyingRootActor.isAdjacentTo(node_one)
-      expectMsg(true)
-      // check the properties of node one
-      val underLyingNodeOneActor =node_one.underlyingActor
-      underLyingNodeOneActor.getBroadcast must equal(true)
-      underLyingNodeOneActor.isAdjacentTo(actorRef)
-      underLyingNodeOneActor.getLocalMass must equal(0)
-      underLyingNodeOneActor.getLevelFor(actorRef) must equal(Option(0))
-      underLyingNodeOneActor.getParent must equal(Option(actorRef))
-
-      // pass a value to Root Actor
-      actorRef ! Local(2)
-
-      underLyingRootActor.getLocalMass must equal(2)
-      underLyingRootActor.getAggregateMass must equal(2)
-
-      // pass a value to the child Actor
-
-
-      node_one ! Local(5)
-      underLyingNodeOneActor.getLocalMass must equal(5)
-      within(200 millis) {
-
-        underLyingRootActor.getAggregateMass must equal(2)
-      }
-
-      // send root node to child
-      node_one ! New(actorRef)
-      underLyingNodeOneActor.getSentMassTo(actorRef) must equal(Some(0))
-      node_one ! SendAggregate()
-      within(200 millis) {
-        underLyingRootActor.getAggregateMass must equal(7)
-      }
-      // make sure the root does not get aggregated again
-      node_one ! SendAggregate()
-      within(200 millis) {
-        underLyingRootActor.getAggregateMass must equal(7)
-      }
-
-      // send a new value to child
-      node_one ! Local(7)
-      underLyingNodeOneActor.getLocalMass must equal(7)
-      node_one ! SendAggregate()
-      within(200 millis) {
-        underLyingRootActor.getAggregateMass must equal(9)
-      }
-    }
-  }
-
+  with ImplicitSender
+{
   "A Non Root actor" must {
     // Creation of the TestActorRef
     val actorRef = TestActorRef[Root]
@@ -168,8 +104,6 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       node_one ! sendBroadcast()
       node_two ! sendBroadcast()
       node_three ! sendBroadcast()
-
-      originalunderlyingActor.getAggregateMass must equal(24)
 
       // over here, set up the connection map
       neighbors = neighbors + (node_one -> Set(actorRef, node_three))

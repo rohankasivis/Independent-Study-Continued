@@ -1,20 +1,17 @@
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import org.scalatest.{Tag, WordSpecLike}
-import org.scalatest.matchers.MustMatchers
-import akka.pattern.ask
 import akka.util.Timeout
+import org.scalatest.WordSpecLike
+import org.scalatest.matchers.MustMatchers
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class SimpleTest extends TestKit(ActorSystem("testSystem"))
+class AdvancedTest extends TestKit(ActorSystem("testSystem"))
   with WordSpecLike
   with MustMatchers
-  with ImplicitSender {
-
-  //override def registerIgnoredTest(testText: String, testTags: Tag*)(testFun: => Any)(implicit pos: Any): Unit = ???
-
+  with ImplicitSender
+{
   "A Root actor" must {
     // Creation of the TestActorRef
     val actorRef = TestActorRef[Root]
@@ -89,6 +86,13 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       //val node_two = system.actorOf(Props(new NonRoot()), name = "node_two")
       val node_three = TestActorRef[NonRoot]
       //val node_three = system.actorOf(Props(new NonRoot()), name = "node_three")
+      val node_four = TestActorRef[NonRoot]
+      val node_five = TestActorRef[NonRoot]
+      val node_six = TestActorRef[NonRoot]
+      val node_seven = TestActorRef[NonRoot]
+      val node_eight = TestActorRef[NonRoot]
+      val node_nine = TestActorRef[NonRoot]
+      val node_ten = TestActorRef[NonRoot]
 
       implicit val timeout = Timeout(0 seconds)
       actorRef ! New(node_one)
@@ -109,44 +113,35 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       val underlyingonenode = node_one.underlyingActor
       val underlyingtwonode = node_two.underlyingActor
       val underlyingthreenode = node_three.underlyingActor
+      val underlyingfournode = node_four.underlyingActor
+      val underlyingfivenode = node_five.underlyingActor
+      val underlyingsixnode = node_six.underlyingActor
+      val underlyingsevennode = node_seven.underlyingActor
+      val underlyingeightnode = node_eight.underlyingActor
+      val underlyingninenode = node_nine.underlyingActor
+      val underlyingtennode = node_ten.underlyingActor
 
-      node_one ! New(actorRef)
-
-      within(200 milliseconds) {
-        underlyingonenode.isAdjacentTo(actorRef)
-        expectMsg(true)
-      }
-
-      node_one ! New(node_three)
-      // val result_onethree = Await.ready(future_onethree, timeout.duration)
-      within(200 milliseconds) {
-        underlyingonenode.isAdjacentTo(node_three)
-        expectMsg(true)
-      }
-
-      node_two ! New(actorRef)
-      within(200 milliseconds) {
-        underlyingtwonode.isAdjacentTo(actorRef)
-        expectMsg(true)
-      }
-
-      node_two ! New(node_two)
-      within(200 milliseconds) {
-        underlyingtwonode.isAdjacentTo(node_three)
-        expectMsg(true)
-      }
-
-      node_three ! New(node_one)
-      within(200 milliseconds) {
-        underlyingthreenode.isAdjacentTo(node_one)
-        expectMsg(true)
-      }
-
-      node_three ! New(node_two)
-      within(200 milliseconds) {
-        underlyingthreenode.isAdjacentTo(node_two)
-        expectMsg(true)
-      }
+      actorRef ! node_one
+      actorRef ! node_two
+      node_one ! actorRef
+      node_one ! node_three
+      node_two ! actorRef
+      node_two ! node_two
+      node_two ! node_four
+      node_three ! node_one
+      node_three ! node_two
+      node_three ! node_five
+      node_four ! node_one
+      node_four ! node_two
+      node_four ! node_three
+      node_four ! node_six
+      node_five ! node_two
+      node_five ! node_three
+      node_five ! node_four
+      node_six ! node_two
+      node_six ! node_three
+      node_six ! node_four
+      node_six ! node_five
 
       actorRef ! Local(2)
       originalunderlyingActor.getLocalMass must equal (2)
@@ -161,15 +156,37 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       node_three ! Local(7)
       underlyingthreenode.getLocalMass must equal(7)
 
+      node_four ! Local(13)
+      node_five ! Local(4)
+      node_six ! Local(6)
+      node_seven ! Local(17)
+      node_eight ! Local(23)
+      node_nine ! Local(11)
+      node_ten ! Local(39)
+
       node_one ! sendToSelf()
       node_two ! sendToSelf()
       node_three ! sendToSelf()
+      node_four ! sendToSelf
+      node_five ! sendToSelf
+      node_six ! sendToSelf
+      node_seven ! sendToSelf
+      node_eight ! sendToSelf
+      node_nine ! sendToSelf
+      node_ten ! sendToSelf
 
       node_one ! sendBroadcast()
       node_two ! sendBroadcast()
       node_three ! sendBroadcast()
+      node_four ! sendBroadcast()
+      node_five ! sendBroadcast()
+      node_six ! sendBroadcast()
+      node_seven ! sendBroadcast()
+      node_eight ! sendBroadcast()
+      node_nine ! sendBroadcast()
+      node_ten ! sendBroadcast()
 
-      originalunderlyingActor.getAggregateMass must equal(24)
+      originalunderlyingActor.getAggregateMass must equal(137)
 
       // over here, set up the connection map
       neighbors = neighbors + (node_one -> Set(actorRef, node_three))
