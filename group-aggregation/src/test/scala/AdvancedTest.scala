@@ -121,27 +121,49 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       val underlyingninenode = node_nine.underlyingActor
       val underlyingtennode = node_ten.underlyingActor
 
-      actorRef ! node_one
-      actorRef ! node_two
-      node_one ! actorRef
-      node_one ! node_three
-      node_two ! actorRef
-      node_two ! node_two
-      node_two ! node_four
-      node_three ! node_one
-      node_three ! node_two
-      node_three ! node_five
-      node_four ! node_one
-      node_four ! node_two
-      node_four ! node_three
-      node_four ! node_six
-      node_five ! node_two
-      node_five ! node_three
-      node_five ! node_four
-      node_six ! node_two
-      node_six ! node_three
-      node_six ! node_four
-      node_six ! node_five
+      actorRef ! New(node_one)
+      actorRef ! New(node_two)
+      node_one ! New(actorRef)
+      node_one ! New(node_three)
+      node_two ! New(actorRef)
+      node_two ! New(node_two)
+      node_two ! New(node_four)
+      node_three ! New(node_one)
+      node_three ! New(node_two)
+      node_three ! New(node_five)
+      node_four ! New(node_one)
+      node_four ! New(node_two)
+      node_four ! New(node_three)
+      node_four ! New(node_six)
+      node_four ! New (node_seven)
+      node_four ! New (node_eight)
+      node_five ! New(node_two)
+      node_five ! New(node_three)
+      node_five ! New(node_four)
+      node_five ! New(node_eight)
+      node_five ! New(node_nine)
+      node_six ! New(node_two)
+      node_six ! New(node_three)
+      node_six ! New(node_four)
+      node_six ! New(node_five)
+      node_six ! New(node_ten)
+      node_seven ! New(node_one)
+      node_seven ! New(node_three)
+      node_seven ! New(node_four)
+      node_seven !  New(node_five)
+      node_seven ! New(node_six)
+      node_eight ! New(node_one)
+      node_eight ! New(node_four)
+      node_eight ! New(node_five)
+      node_eight ! New(node_seven)
+
+      node_nine ! New(node_two)
+      node_nine ! New(node_five)
+      node_nine ! New(node_six)
+      node_nine ! New(node_seven)
+      node_ten  ! New(node_three)
+      node_ten  ! New(node_six)
+      node_ten  ! New(node_nine)
 
       actorRef ! Local(2)
       originalunderlyingActor.getLocalMass must equal (2)
@@ -157,6 +179,7 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       underlyingthreenode.getLocalMass must equal(7)
 
       node_four ! Local(13)
+
       node_five ! Local(4)
       node_six ! Local(6)
       node_seven ! Local(17)
@@ -167,13 +190,13 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       node_one ! sendToSelf()
       node_two ! sendToSelf()
       node_three ! sendToSelf()
-      node_four ! sendToSelf
-      node_five ! sendToSelf
-      node_six ! sendToSelf
-      node_seven ! sendToSelf
-      node_eight ! sendToSelf
-      node_nine ! sendToSelf
-      node_ten ! sendToSelf
+      node_four ! sendToSelf()
+      node_five ! sendToSelf()
+      node_six ! sendToSelf()
+      node_seven ! sendToSelf()
+      node_eight ! sendToSelf()
+      node_nine ! sendToSelf()
+      node_ten ! sendToSelf()
 
       node_one ! sendBroadcast()
       node_two ! sendBroadcast()
@@ -186,7 +209,12 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       node_nine ! sendBroadcast()
       node_ten ! sendBroadcast()
 
+      Thread.sleep(12000)
       originalunderlyingActor.getAggregateMass must equal(137)
+     /*within(60 seconds,80 seconds) {
+      //  expectNoMsg
+        originalunderlyingActor.getAggregateMass must equal(137)
+      }*/
 
       // over here, set up the connection map
       neighbors = neighbors + (node_one -> Set(actorRef, node_three))
