@@ -165,9 +165,7 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       node_two ! sendToSelf()
       node_three ! sendToSelf()
 
-      node_one ! sendBroadcast()
-      node_two ! sendBroadcast()
-      node_three ! sendBroadcast()
+      Thread.sleep(5000)
 
       originalunderlyingActor.getAggregateMass must equal(24)
 
