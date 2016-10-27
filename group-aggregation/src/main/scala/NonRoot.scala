@@ -7,10 +7,10 @@ class NonRoot extends NodeActors
   import context.dispatcher
   private var hasStartedSelfSend = false
   private var deliverToSelf: Cancellable = null
+
   override def postStop() = {
     if(hasStartedSelfSend)
       deliverToSelf.cancel()
-
   }
 
   def new_entry(nodeActors:ActorRef)
@@ -93,13 +93,16 @@ class NonRoot extends NodeActors
 
   def broadcast_var()
   {
-    println("Value of broadcast : "+broadcast+" in ActorRef: "+self.toString())
+    if(isEnabled)
+      println("Value of broadcast : "+broadcast+" in ActorRef: "+self.toString())
     if(broadcast)
     {
-      println ("Entering broadcast_var")
+      if(isEnabled)
+        println ("Entering broadcast_var")
       send (adjacent, Status (self, level (adjacent, levels) ) )
       broadcast = false
-      println ("Exiting broadcast_var")
+      if(isEnabled)
+        println ("Exiting broadcast_var")
     }
   }
 
@@ -119,8 +122,10 @@ class NonRoot extends NodeActors
       case Some(value) =>
         sent_mass.get(res.get) match {
           case Some(s) =>
-            println ("Self :" + self.toString () + "levels size :" + levels.size + " adjacent size:" + adjacent.size)
-            println (self.toString () + " sending Aggregate(" + aggregate_mass + ") to " + res.get.toString () )
+            if(isEnabled) {
+              println("Self :" + self.toString() + "levels size :" + levels.size + " adjacent size:" + adjacent.size)
+              println(self.toString() + " sending Aggregate(" + aggregate_mass + ") to " + res.get.toString())
+            }
             send_agg(res.get, Aggregate(self, aggregate_mass))
             val tmp1: Int = sent_mass.get(res.get).get
             val temp = tmp1 + aggregate_mass
@@ -144,7 +149,8 @@ class NonRoot extends NodeActors
         send(arg1, Status(self, first))
       }
       new_entry (arg1)
-      println("adjacent size in self :"+self.toString()+" " +adjacent.size)
+      if(isEnabled)
+        println("adjacent size in self :"+self.toString()+" " +adjacent.size)
       //      System.out.println ("Finish Calling in NonRoot Case New :" + self.toString () )
       sender ! true
     }
@@ -155,8 +161,10 @@ class NonRoot extends NodeActors
         case Some(s) =>
           received_mass.get(arg1) match {
             case Some(s) =>
-              System.out.println ("Inside Fail")
-              println ("Fail message received from " + arg1.toString () + " to ActorRef :" + self.toString () )
+              if(isEnabled) {
+                System.out.println("Inside Fail")
+                println("Fail message received from " + arg1.toString() + " to ActorRef :" + self.toString())
+              }
 
               val temp: Set[ActorRef] = adjacent - arg1
               val temp_lvl: Map[ActorRef, Int] = levels.filterKeys (_!= arg1) // created two temp variables to do the level check condition
@@ -169,7 +177,8 @@ class NonRoot extends NodeActors
               val sent_val: Option[Int] = sent_mass.get (arg1)
               val received_val: Option[Int] = received_mass.get (arg1)
               aggregate_mass = aggregate_mass + sent_val.get - received_val.get
-              System.out.println ("Inside Fail")
+              if(isEnabled)
+                System.out.println ("Inside Fail")
             case None => None
           }
         case None => None
@@ -177,9 +186,11 @@ class NonRoot extends NodeActors
     }
 
     case Aggregate(arg1, arg2) => val result = {
-      println ("received Aggregate(" + arg2 + ") from " + arg1.toString () )
+      if(isEnabled)
+        println ("received Aggregate(" + arg2 + ") from " + arg1.toString () )
       aggregate_mass = aggregate_mass + arg2
-      println ("Aggregate Mass value = " + aggregate_mass)
+      if(isEnabled)
+        println ("Aggregate Mass value = " + aggregate_mass)
       //aggregate_mass = aggregate_mass + arg2
       val tmp_val = received_mass.get (arg1) match {
         case Some (s) => s
@@ -200,9 +211,11 @@ class NonRoot extends NodeActors
     }
 
     case Local(arg1) => val result = {
-      println("Received Aggregate in "+self.toString()+" node : " + arg1)
+      if(isEnabled)
+        println("Received Aggregate in "+self.toString()+" node : " + arg1)
       aggregate_mass = aggregate_mass + arg1 - local_mass
-      println(" Aggregate in "+self.toString()+" node  :"+aggregate_mass)
+      if(isEnabled)
+        println(" Aggregate in "+self.toString()+" node  :"+aggregate_mass)
       // handle_aggregate()
 
       local_mass = arg1
@@ -218,11 +231,14 @@ class NonRoot extends NodeActors
     case Status(arg1, arg2) => val result = {
       // check the adjacent contains the passed in arg1 if not
       // add it
-      System.out.println ("Start Calling in NonRoot Case Status: " + arg1.toString () )
-      println(self.toString()+" adjacent size in status "+adjacent.size)
+      if(isEnabled) {
+        System.out.println("Start Calling in NonRoot Case Status: " + arg1.toString())
+        println(self.toString() + " adjacent size in status " + adjacent.size)
+      }
       if (adjacent.isEmpty)
       {
-        println("Empty")
+        if(isEnabled)
+          println("Empty")
       }
       if (! adjacent.contains (arg1) ) {
         adjacent += arg1
@@ -232,7 +248,8 @@ class NonRoot extends NodeActors
       if (level (adjacent, levels) != level (adjacent, temp_lvl) )
         broadcast = true
       //  levels = levels.filterKeys(_ != arg1)
-      System.out.println ("Stop Calling in NonRoot Case Status :" + arg1.toString () )
+      if(isEnabled)
+        System.out.println ("Stop Calling in NonRoot Case Status :" + arg1.toString () )
     }
 
     case sendToSelf() =>

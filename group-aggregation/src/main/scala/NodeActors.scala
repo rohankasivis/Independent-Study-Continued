@@ -21,6 +21,7 @@ abstract class NodeActors extends Actor
   protected var aggregate_mass:Int = 0
   protected var adjacent:Set[ActorRef] = Set.empty
   protected var broadcast:Boolean = false
+  protected val isEnabled = sys.props.get("DEBUG").getOrElse("false").toBoolean
 
   val system = ActorSystem("NodeActors")
 
