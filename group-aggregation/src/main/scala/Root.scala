@@ -2,7 +2,8 @@ import akka.actor.ActorRef
 
 class Root extends NodeActors
 {
-
+  // these are all of the private variables that are used
+  // a new entry is added.. simply instantiate the private variables accordingly here
   def new_entry(nodeActors:ActorRef)
   {
     adjacent += nodeActors
@@ -16,17 +17,35 @@ class Root extends NodeActors
     adjacent -= nodeActors
   }
 
-  // added by Karl
-  def getLevel = Some(0)
+  def level(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[Int] =
+  {
+    // not implemented here - no need to, as this is the root with default level 0
+    val ret:Option[Int] = Some(0)
+    return ret
+  }
 
-  // added by Karl
-  def getParent = null
+  def parent(nodeActors:Set[ActorRef], levels:Map[ActorRef, Int]): Option[ActorRef] =
+  {
+    // not implemented here - no need to, as the root does not contain any parents
+    null
+  }
 
   def send(nodeActors:ActorRef, value:Status)
   {
     // in this case, we do not have to check for option, as 0 will always be passed in
 
     nodeActors ! value
+  }
+
+  // added by Karl
+  def getLevel = Some(0)
+
+  // added by Karl
+  def getParent = null
+
+  def broadcast_var()
+  {
+    // not implemented here
   }
 
   def receive: Receive = {
