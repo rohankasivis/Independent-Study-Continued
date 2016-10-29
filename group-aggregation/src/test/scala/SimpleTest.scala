@@ -55,7 +55,7 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
 
       // send root node to child
       node_one ! New(actorRef)
-      underLyingNodeOneActor.getSentMassTo(actorRef) must equal(Some(0))
+      underLyingNodeOneActor.getBalanceFor(actorRef) must equal(Some(0))
       node_one ! SendAggregate()
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(7)

@@ -52,7 +52,7 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
 
       // send root node to child
       node_one ! New(actorRef)
-      underLyingNodeOneActor.getSentMassTo(actorRef) must equal(Some(0))
+      underLyingNodeOneActor.getBalanceFor(actorRef) must equal(Some(0))
       node_one ! SendAggregate()
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(7)
@@ -198,23 +198,12 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       node_nine ! sendToSelf()
       node_ten ! sendToSelf()
 
-      node_one ! sendBroadcast()
-      node_two ! sendBroadcast()
-      node_three ! sendBroadcast()
-      node_four ! sendBroadcast()
-      node_five ! sendBroadcast()
-      node_six ! sendBroadcast()
-      node_seven ! sendBroadcast()
-      node_eight ! sendBroadcast()
-      node_nine ! sendBroadcast()
-      node_ten ! sendBroadcast()
-
       Thread.sleep(12000)
       originalunderlyingActor.getAggregateMass must equal(137)
-     /*within(60 seconds,80 seconds) {
-      //  expectNoMsg
-        originalunderlyingActor.getAggregateMass must equal(137)
-      }*/
+      /*within(60 seconds,80 seconds) {
+       //  expectNoMsg
+         originalunderlyingActor.getAggregateMass must equal(137)
+       }*/
 
       // over here, set up the connection map
       neighbors = neighbors + (node_one -> Set(actorRef, node_three))
