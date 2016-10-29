@@ -7,8 +7,7 @@ class Root extends NodeActors
   def new_entry(nodeActors:ActorRef)
   {
     adjacent += nodeActors
-    sent_mass = sent_mass + (nodeActors -> 0)
-    received_mass = received_mass + (nodeActors -> 0)
+    balance = balance + (nodeActors -> 0)
     levels += (nodeActors -> 1)
   }
 
@@ -71,9 +70,8 @@ class Root extends NodeActors
         case null => None
         case some =>
           remove_entry (arg1)
-          val sent_val: Int = sent_mass.get (arg1).get
-          val received_val: Int = received_mass.get (arg1).get
-          aggregate_mass = aggregate_mass + sent_val - received_val
+          val balance_val: Int = balance.get(arg1).get
+          aggregate_mass = aggregate_mass + balance_val
       }
     }
 
@@ -86,8 +84,8 @@ class Root extends NodeActors
           aggregate_mass = aggregate_mass + arg2
           if(isEnabled)
             println ("Aggregate Mass value = " + aggregate_mass)
-          var temp: Int = received_mass.get (arg1).get + arg2
-          received_mass = received_mass + (arg1 -> temp) // reassignment of received mass to modify index
+          var temp: Int = balance.get(arg1).get - arg2
+          balance = balance + (arg1 -> temp) // reassignment of received mass to modify index
       }
     }
 

@@ -16,8 +16,7 @@ class NonRoot extends NodeActors
   def new_entry(nodeActors:ActorRef)
   {
     adjacent += nodeActors
-    sent_mass = sent_mass + (nodeActors -> 0)
-    received_mass = received_mass + (nodeActors -> 0)
+    balance = balance + (nodeActors -> 0)
   }
 
   def remove_entry(nodeActors:ActorRef)
@@ -90,7 +89,6 @@ class NonRoot extends NodeActors
       curr ! value
   }
 
-
   def broadcast_var()
   {
     if(isEnabled)
@@ -120,16 +118,16 @@ class NonRoot extends NodeActors
     val res:Option[ActorRef] = parent(adjacent, levels)
     res match {
       case Some(value) =>
-        sent_mass.get(res.get) match {
+        balance.get(res.get) match {
           case Some(s) =>
             if(isEnabled) {
               println("Self :" + self.toString() + "levels size :" + levels.size + " adjacent size:" + adjacent.size)
               println(self.toString() + " sending Aggregate(" + aggregate_mass + ") to " + res.get.toString())
             }
             send_agg(res.get, Aggregate(self, aggregate_mass))
-            val tmp1: Int = sent_mass.get(res.get).get
+            val tmp1: Int = balance.get(res.get).get
             val temp = tmp1 + aggregate_mass
-            sent_mass = sent_mass + (res.get -> temp)
+            balance = balance + (res.get -> temp)
             aggregate_mass = 0
           case None => // do nothing
         }
@@ -156,10 +154,10 @@ class NonRoot extends NodeActors
     }
 
     case Fail(arg1) => val result = {
-      sent_mass.get(arg1) match
+      balance.get(arg1) match
       {
         case Some(s) =>
-          received_mass.get(arg1) match {
+          balance.get(arg1) match {
             case Some(s) =>
               if(isEnabled) {
                 System.out.println("Inside Fail")
@@ -174,9 +172,8 @@ class NonRoot extends NodeActors
               adjacent -= arg1
               levels = levels.filterKeys (_!= arg1)
               // adjacent(sent_index) = null     // effectively removes element
-              val sent_val: Option[Int] = sent_mass.get (arg1)
-              val received_val: Option[Int] = received_mass.get (arg1)
-              aggregate_mass = aggregate_mass + sent_val.get - received_val.get
+              val balance_val: Option[Int] = balance.get(arg1)
+              aggregate_mass = aggregate_mass + balance_val.get
               if(isEnabled)
                 System.out.println ("Inside Fail")
             case None => None
@@ -191,23 +188,14 @@ class NonRoot extends NodeActors
       aggregate_mass = aggregate_mass + arg2
       if(isEnabled)
         println ("Aggregate Mass value = " + aggregate_mass)
-      //aggregate_mass = aggregate_mass + arg2
-      val tmp_val = received_mass.get (arg1) match {
-        case Some (s) => s
+      balance.get (arg1) match {
+        case Some (s) =>
+          val balance_Val: Option[Int] = balance.get(arg1)
+          val new_entry:Int = balance_Val.get - arg2
+          balance = balance + (arg1 -> new_entry)
         case None => 0
       }
-      tmp_val + arg2
       handle_aggregate ()
-    }
-
-    case Drop(arg1, arg2) => val result = {
-      aggregate_mass = aggregate_mass + arg2
-      val tmp_val=sent_mass.get(arg1)match
-      {
-        case Some(s) => s
-        case None => 0
-      }
-      tmp_val - arg2
     }
 
     case Local(arg1) => val result = {

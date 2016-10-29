@@ -15,8 +15,7 @@ case class sendToSelf()
 abstract class NodeActors extends Actor
 {
   protected var levels:Map[ActorRef, Int] = Map.empty
-  protected var sent_mass:Map[ActorRef, Int] = Map.empty
-  protected var received_mass:Map[ActorRef, Int] = Map.empty
+  protected var balance:Map[ActorRef, Int] = Map.empty
   protected var local_mass:Int = 0
   protected var aggregate_mass:Int = 0
   protected var adjacent:Set[ActorRef] = Set.empty
@@ -34,7 +33,5 @@ abstract class NodeActors extends Actor
 
   def isAdjacentTo(a: ActorRef) = adjacent.contains(a)
   def getLevelFor(a: ActorRef) = levels.get(a)
-  def getSentMassTo(a: ActorRef) = sent_mass.get(a)
-  def getReceivedMassFrom(a: ActorRef) = received_mass.get(a)
-
+  def getBalanceFor(a: ActorRef) = balance.get(a)
 }
