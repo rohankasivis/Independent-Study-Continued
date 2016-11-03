@@ -1,12 +1,12 @@
 import akka.actor._
 
 // these are all of the necessary case classes
-case class New(arg1:ActorRef)
-case class Fail(arg1:ActorRef)
-case class Aggregate(arg1:ActorRef, arg2:Int)
-case class Local(arg1:Int)
-case class Status(arg1:ActorRef, arg2:Option[Int])
-case class Drop(arg1:ActorRef, arg2:Int)
+case class New(newActor:ActorRef)
+case class Fail(removeActor:ActorRef)
+case class Aggregate(aggregateActor:ActorRef, valueToAggregate:Int)
+case class Local(localAdd:Int)
+case class Status(actorOne:ActorRef, theStatus:Option[Int])
+case class Drop(actorRemove:ActorRef, removeVal:Int)
 case class SendAggregate()
 case class sendBroadcast()
 case class sendToSelf()
