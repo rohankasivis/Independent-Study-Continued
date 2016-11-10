@@ -1,4 +1,7 @@
+import javafx.print.Printer
+
 import akka.actor.{ActorRef, Cancellable}
+import akka.event.slf4j.Logger
 
 import scala.concurrent.duration.Duration
 
@@ -63,30 +66,18 @@ class NonRoot extends NodeActors {
     }
   }
 
-  def send(nodeActors: Set[ActorRef], value: Status) {
-    for (curr <- nodeActors)
-      curr ! value
-  }
-
   def broadcast_var() {
     if (isEnabled)
       println("Value of broadcast : " + broadcast + " in ActorRef: " + self.toString())
     if (broadcast) {
       if (isEnabled)
         println("Entering broadcast_var")
-      send(adjacent, Status(self, level(adjacent, levels)))
+      for(curr <- adjacent)
+        curr ! Status(self, level(adjacent, levels))
       broadcast = false
       if (isEnabled)
         println("Exiting broadcast_var")
     }
-  }
-
-  def send(arg1: ActorRef, status: Status) = {
-    arg1 ! status
-  }
-
-  def send_agg(arg1: ActorRef, adjacent: Aggregate) = {
-    arg1 ! adjacent
   }
 
   def handle_aggregate() = {
@@ -99,10 +90,8 @@ class NonRoot extends NodeActors {
               println("Self :" + self.toString() + "levels size :" + levels.size + " adjacent size:" + adjacent.size)
               println(self.toString() + " sending Aggregate(" + aggregate_mass + ") to " + res.get.toString())
             }
-            send_agg(res.get, Aggregate(self, aggregate_mass))
-            val tmp1: Int = balance.get(res.get).get
-            val temp = tmp1 + aggregate_mass
-            balance = balance + (res.get -> temp)
+            res.get ! Aggregate(self, aggregate_mass)
+            balance = balance + (res.get -> (balance.get(res.get).get + aggregate_mass))
             aggregate_mass = 0
           case None => // do nothing
         }
@@ -119,7 +108,7 @@ class NonRoot extends NodeActors {
     }
     if (first.get != - 1) {
       // then the level does exist
-      send(newActor, Status(self, first))
+      newActor ! Status(self, first)
     }
     adjacent += newActor
     balance = balance + (newActor -> 0)
@@ -141,15 +130,12 @@ class NonRoot extends NodeActors {
               println("Fail message received from " + removeActor.toString() + " to ActorRef :" + self.toString())
             }
 
-            val temp: Set[ActorRef] = adjacent - removeActor
-            val temp_lvl: Map[ActorRef, Int] = levels.filterKeys (_!= removeActor) // created two temp variables to do the level check condition
-            if (level (adjacent, levels) != level (temp, temp_lvl) )
+            if (level (adjacent, levels) != level (adjacent - removeActor, levels.filterKeys (_!= removeActor)) )
               broadcast = true
 
             adjacent -= removeActor
             levels = levels.filterKeys (_!= removeActor)
-            val balance_val: Option[Int] = balance.get(removeActor)
-            aggregate_mass = aggregate_mass + balance_val.get
+            aggregate_mass = aggregate_mass + balance.get(removeActor).get
             if(isEnabled)
               System.out.println ("Inside Fail")
           case None => None
@@ -167,9 +153,7 @@ class NonRoot extends NodeActors {
       println ("Aggregate Mass value = " + aggregate_mass)
     balance.get (aggregateActor) match {
       case Some (s) =>
-        val balance_Val: Option[Int] = balance.get(aggregateActor)
-        val new_entry:Int = balance_Val.get - valueToAdd
-        balance = balance + (aggregateActor -> new_entry)
+        balance = balance + (aggregateActor -> (balance.get(aggregateActor).get - valueToAdd))
       case None => 0
     }
     handle_aggregate ()
@@ -203,8 +187,7 @@ class NonRoot extends NodeActors {
       adjacent += actorOne
     }
     levels += (actorOne -> arg2.get)
-    val temp_lvl: Map[ActorRef, Int] = levels.filterKeys (_!= actorOne)
-    if (level (adjacent, levels) != level (adjacent, temp_lvl) )
+    if (level (adjacent, levels) != level (adjacent, levels.filterKeys (_!= actorOne)) )
       broadcast = true
     //  levels = levels.filterKeys(_ != arg1)
     if(isEnabled)

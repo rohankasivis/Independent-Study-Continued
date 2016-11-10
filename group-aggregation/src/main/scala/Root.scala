@@ -35,45 +35,30 @@ class Root extends NodeActors
 
   def handle_new(newActor:ActorRef) =
   {
-    newActor match {
-      case some =>
-        if(isEnabled)
-          System.out.println ("Start Calling in Root Case New :" + newActor.toString () )
-        var send_int: Option[Int] = Some (0)
-        val actorref = self
-        send (newActor, Status (actorref, send_int) ) // passing in a status of level 0 to the send function
-        adjacent += newActor
-        balance = balance + (newActor -> 0)
-        levels += (newActor -> 1)
-        if(isEnabled)
-          System.out.println ("Stop Calling in Root Case New :" + newActor.toString () )
-    }
+    if(isEnabled)
+      System.out.println ("Start Calling in Root Case New :" + newActor.toString () )
+    newActor ! Status(self, Some(0)) // passing in a status of level 0 to the send function
+    adjacent += newActor
+    balance = balance + (newActor -> 0)
+    if(isEnabled)
+      System.out.println ("Stop Calling in Root Case New :" + newActor.toString () )
     sender ! true
   }
 
   def handle_fail(removeActor:ActorRef) =
   {
-    removeActor match
-    {
-      case some =>
-        adjacent -= removeActor
-        val balance_val: Int = balance.get(removeActor).get
-        aggregate_mass = aggregate_mass + balance_val
-    }
+    adjacent -= removeActor
+    aggregate_mass = aggregate_mass + balance.get(removeActor).get
   }
 
   def handle_agg_message(aggregateActor:ActorRef, valueToAggregate:Int) =
   {
-    aggregateActor match {
-      case some =>
-        if(isEnabled)
-          println ("received Aggregate(" + valueToAggregate + ") from " + aggregateActor.toString () )
-        aggregate_mass = aggregate_mass + valueToAggregate
-        if(isEnabled)
-          println ("Aggregate Mass value = " + aggregate_mass)
-        var temp: Int = balance.get(aggregateActor).get - valueToAggregate
-        balance = balance + (aggregateActor -> temp) // reassignment of received mass to modify index
-    }
+    if(isEnabled)
+      println ("received Aggregate(" + valueToAggregate + ") from " + aggregateActor.toString () )
+    aggregate_mass = aggregate_mass + valueToAggregate
+    if(isEnabled)
+      println ("Aggregate Mass value = " + aggregate_mass)
+    balance = balance + (aggregateActor -> (balance.get(aggregateActor).get - valueToAggregate)) // reassignment of received mass to modify index
   }
 
   def handle_local(localAdd:Int) =
