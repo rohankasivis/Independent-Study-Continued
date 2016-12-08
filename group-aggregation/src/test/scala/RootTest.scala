@@ -1,3 +1,4 @@
+import Group.IntPlus
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import org.scalatest.WordSpecLike
@@ -22,8 +23,9 @@ class RootTest extends TestKit(ActorSystem("testSystem"))
       // This call is synchronous. The actor receive() method will be called in the current thread
       val node_one = TestActorRef[NonRoot]
       val node_two = TestActorRef[NonRoot]
-      actorRef ! New(node_one)
-      actorRef ! New(node_two)
+      val curr:IntPlus = new IntPlus
+      actorRef ! New(node_one, curr)
+      actorRef ! New(node_two, curr)
       val underLyingRootActor=actorRef.underlyingActor
       underLyingRootActor.isAdjacentTo(node_one) must equal(true)
       expectMsg(true)
@@ -38,14 +40,14 @@ class RootTest extends TestKit(ActorSystem("testSystem"))
       underLyingNodeOneActor.getParent must equal(Option(actorRef))
 
       // pass a value to Root Actor
-      actorRef ! Local(2)
+      actorRef ! Local(2, curr)
 
       underLyingRootActor.getLocalMass must equal(2)
       underLyingRootActor.getAggregateMass must equal(2)
 
       // pass a value to the child Actor
 
-      node_one ! Local(5)
+      node_one ! Local(5, curr)
       underLyingNodeOneActor.getLocalMass must equal(5)
 
       within(200 millis) {
@@ -54,20 +56,20 @@ class RootTest extends TestKit(ActorSystem("testSystem"))
       }
 
       // send root node to child
-      node_one ! New(actorRef)
+      node_one ! New(actorRef, curr)
       underLyingNodeOneActor.getBalanceFor(actorRef) must equal(Some(0))
-      node_one ! SendAggregate()
+      node_one ! SendAggregate(curr)
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(7)
       }
       // make sure the root does not get aggregated again
-      node_one ! SendAggregate()
+      node_one ! SendAggregate(curr)
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(7)
       }
 
       // send a new value to child
-      node_two ! Local(7)
+      node_two ! Local(7, curr)
       underLyingNodeTwoActor.getLocalMass must equal(7)
     }
   }

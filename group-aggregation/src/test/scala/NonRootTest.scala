@@ -1,3 +1,4 @@
+import Group.IntPlus
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import akka.util.Timeout
@@ -25,9 +26,9 @@ class NonRootTest extends TestKit(ActorSystem("testSystem"))
       //val node_two = system.actorOf(Props(new NonRoot()), name = "node_two")
       val node_three = TestActorRef[NonRoot]
       //val node_three = system.actorOf(Props(new NonRoot()), name = "node_three")
-
+      val curr: IntPlus = new IntPlus
       implicit val timeout = Timeout(0 seconds)
-      actorRef ! New(node_one)
+      actorRef ! New(node_one, curr)
 
       val originalunderlyingActor = actorRef.underlyingActor
       within(200 milliseconds) {
@@ -35,7 +36,7 @@ class NonRootTest extends TestKit(ActorSystem("testSystem"))
         expectMsg(true)
       }
 
-      actorRef ! New(node_two)
+      actorRef ! New(node_two, curr)
 
       within(200 milliseconds) {
         originalunderlyingActor.isAdjacentTo(node_two)
@@ -46,64 +47,64 @@ class NonRootTest extends TestKit(ActorSystem("testSystem"))
       val underlyingtwonode = node_two.underlyingActor
       val underlyingthreenode = node_three.underlyingActor
 
-      node_one ! New(actorRef)
+      node_one ! New(actorRef, curr)
 
       within(200 milliseconds) {
         underlyingonenode.isAdjacentTo(actorRef)
         expectMsg(true)
       }
 
-      node_one ! New(node_three)
+      node_one ! New(node_three, curr)
       // val result_onethree = Await.ready(future_onethree, timeout.duration)
       within(200 milliseconds) {
         underlyingonenode.isAdjacentTo(node_three)
         expectMsg(true)
       }
 
-      node_two ! New(actorRef)
+      node_two ! New(actorRef, curr)
       within(200 milliseconds) {
         underlyingtwonode.isAdjacentTo(actorRef)
         expectMsg(true)
       }
 
-      node_two ! New(node_two)
+      node_two ! New(node_two, curr)
       within(200 milliseconds) {
         underlyingtwonode.isAdjacentTo(node_three)
         expectMsg(true)
       }
 
-      node_three ! New(node_one)
+      node_three ! New(node_one, curr)
       within(200 milliseconds) {
         underlyingthreenode.isAdjacentTo(node_one)
         expectMsg(true)
       }
 
-      node_three ! New(node_two)
+      node_three ! New(node_two, curr)
       within(200 milliseconds) {
         underlyingthreenode.isAdjacentTo(node_two)
         expectMsg(true)
       }
 
-      actorRef ! Local(2)
+      actorRef ! Local(2, curr)
       originalunderlyingActor.getLocalMass must equal (2)
       originalunderlyingActor.getAggregateMass must equal (2)
 
-      node_one ! Local(5)
+      node_one ! Local(5, curr)
       underlyingonenode.getLocalMass must equal (5)
 
-      node_two ! Local(10)
+      node_two ! Local(10, curr)
       underlyingtwonode.getLocalMass must equal(10)
 
-      node_three ! Local(7)
+      node_three ! Local(7, curr)
       underlyingthreenode.getLocalMass must equal(7)
 
-      node_one ! sendToSelf()
-      node_two ! sendToSelf()
-      node_three ! sendToSelf()
+      node_one ! sendToSelf(curr)
+      node_two ! sendToSelf(curr)
+      node_three ! sendToSelf(curr)
 
-      node_one ! sendBroadcast()
-      node_two ! sendBroadcast()
-      node_three ! sendBroadcast()
+      node_one ! sendBroadcast(curr)
+      node_two ! sendBroadcast(curr)
+      node_three ! sendBroadcast(curr)
 
       // over here, set up the connection map
       neighbors = neighbors + (node_one -> Set(actorRef, node_three))
@@ -112,7 +113,7 @@ class NonRootTest extends TestKit(ActorSystem("testSystem"))
 
       // over here, we go through all of the individual nodes and send the fail messages appropriately
       neighbors.get(node_one) match {
-        case Some(s) => s.foreach { n => node_one ! Fail(n) }
+        case Some(s) => s.foreach { n => node_one ! Fail(n, curr) }
         case None => ()
       }
       //system stop node_one
@@ -120,7 +121,7 @@ class NonRootTest extends TestKit(ActorSystem("testSystem"))
       neighbors.contains(node_one) must equal (false)
 
       neighbors.get(node_two) match {
-        case Some(s) => s.foreach { n => node_two ! Fail(n) }
+        case Some(s) => s.foreach { n => node_two ! Fail(n, curr) }
         case None => ()
       }
 
@@ -128,7 +129,7 @@ class NonRootTest extends TestKit(ActorSystem("testSystem"))
       neighbors.contains(node_two) must equal (false)
 
       neighbors.get(node_three) match {
-        case Some(s) => s.foreach { n => node_three ! Fail(n) }
+        case Some(s) => s.foreach { n => node_three ! Fail(n, curr) }
         case None => ()
       }
 

@@ -1,3 +1,4 @@
+import Group.IntPlus
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import org.scalatest.{Tag, WordSpecLike}
@@ -20,11 +21,13 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
     val actorRef = TestActorRef[Root]
     var neighbors : Map[ActorRef, Set[ActorRef]] = Map.empty
 
+    val curr: IntPlus = new IntPlus
+
     "receive messages" in {
       // This call is synchronous. The actor receive() method will be called in the current thread
       val node_one = TestActorRef[NonRoot]
 
-      actorRef ! New(node_one)
+      actorRef ! New(node_one, curr)
 
       val underLyingRootActor=actorRef.underlyingActor
       underLyingRootActor.isAdjacentTo(node_one)
@@ -38,7 +41,7 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       underLyingNodeOneActor.getParent must equal(Option(actorRef))
 
       // pass a value to Root Actor
-      actorRef ! Local(2)
+      actorRef ! Local(2, curr)
 
       underLyingRootActor.getLocalMass must equal(2)
       underLyingRootActor.getAggregateMass must equal(2)
@@ -46,7 +49,7 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       // pass a value to the child Actor
 
 
-      node_one ! Local(5)
+      node_one ! Local(5, curr)
       underLyingNodeOneActor.getLocalMass must equal(5)
       within(200 millis) {
 
@@ -54,22 +57,22 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       }
 
       // send root node to child
-      node_one ! New(actorRef)
+      node_one ! New(actorRef, curr)
       underLyingNodeOneActor.getBalanceFor(actorRef) must equal(Some(0))
-      node_one ! SendAggregate()
+      node_one ! SendAggregate(curr)
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(7)
       }
       // make sure the root does not get aggregated again
-      node_one ! SendAggregate()
+      node_one ! SendAggregate(curr)
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(7)
       }
 
       // send a new value to child
-      node_one ! Local(7)
+      node_one ! Local(7, curr)
       underLyingNodeOneActor.getLocalMass must equal(7)
-      node_one ! SendAggregate()
+      node_one ! SendAggregate(curr)
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(9)
       }
@@ -89,9 +92,9 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       //val node_two = system.actorOf(Props(new NonRoot()), name = "node_two")
       val node_three = TestActorRef[NonRoot]
       //val node_three = system.actorOf(Props(new NonRoot()), name = "node_three")
-
+      val curr: IntPlus = new IntPlus
       implicit val timeout = Timeout(0 seconds)
-      actorRef ! New(node_one)
+      actorRef ! New(node_one, curr)
 
       val originalunderlyingActor = actorRef.underlyingActor
       within(200 milliseconds) {
@@ -99,7 +102,7 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
         expectMsg(true)
       }
 
-      actorRef ! New(node_two)
+      actorRef ! New(node_two, curr)
 
       within(200 milliseconds) {
         originalunderlyingActor.isAdjacentTo(node_two)
@@ -110,60 +113,60 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       val underlyingtwonode = node_two.underlyingActor
       val underlyingthreenode = node_three.underlyingActor
 
-      node_one ! New(actorRef)
+      node_one ! New(actorRef, curr)
 
       within(200 milliseconds) {
         underlyingonenode.isAdjacentTo(actorRef)
         expectMsg(true)
       }
 
-      node_one ! New(node_three)
+      node_one ! New(node_three, curr)
       // val result_onethree = Await.ready(future_onethree, timeout.duration)
       within(200 milliseconds) {
         underlyingonenode.isAdjacentTo(node_three)
         expectMsg(true)
       }
 
-      node_two ! New(actorRef)
+      node_two ! New(actorRef, curr)
       within(200 milliseconds) {
         underlyingtwonode.isAdjacentTo(actorRef)
         expectMsg(true)
       }
 
-      node_two ! New(node_two)
+      node_two ! New(node_two, curr)
       within(200 milliseconds) {
         underlyingtwonode.isAdjacentTo(node_three)
         expectMsg(true)
       }
 
-      node_three ! New(node_one)
+      node_three ! New(node_one, curr)
       within(200 milliseconds) {
         underlyingthreenode.isAdjacentTo(node_one)
         expectMsg(true)
       }
 
-      node_three ! New(node_two)
+      node_three ! New(node_two, curr)
       within(200 milliseconds) {
         underlyingthreenode.isAdjacentTo(node_two)
         expectMsg(true)
       }
 
-      actorRef ! Local(2)
+      actorRef ! Local(2, curr)
       originalunderlyingActor.getLocalMass must equal (2)
       originalunderlyingActor.getAggregateMass must equal (2)
 
-      node_one ! Local(5)
+      node_one ! Local(5, curr)
       underlyingonenode.getLocalMass must equal (5)
 
-      node_two ! Local(10)
+      node_two ! Local(10, curr)
       underlyingtwonode.getLocalMass must equal(10)
 
-      node_three ! Local(7)
+      node_three ! Local(7, curr)
       underlyingthreenode.getLocalMass must equal(7)
 
-      node_one ! sendToSelf()
-      node_two ! sendToSelf()
-      node_three ! sendToSelf()
+      node_one ! sendToSelf(curr)
+      node_two ! sendToSelf(curr)
+      node_three ! sendToSelf(curr)
 
       Thread.sleep(5000)
 
@@ -176,7 +179,7 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
 
       // over here, we go through all of the individual nodes and send the fail messages appropriately
       neighbors.get(node_one) match {
-        case Some(s) => s.foreach { n => node_one ! Fail(n) }
+        case Some(s) => s.foreach { n => node_one ! Fail(n, curr) }
         case None => ()
       }
       //system stop node_one
@@ -184,7 +187,7 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       neighbors.contains(node_one) must equal (false)
 
       neighbors.get(node_two) match {
-        case Some(s) => s.foreach { n => node_two ! Fail(n) }
+        case Some(s) => s.foreach { n => node_two ! Fail(n, curr) }
         case None => ()
       }
 
@@ -192,7 +195,7 @@ class SimpleTest extends TestKit(ActorSystem("testSystem"))
       neighbors.contains(node_two) must equal (false)
 
       neighbors.get(node_three) match {
-        case Some(s) => s.foreach { n => node_three ! Fail(n) }
+        case Some(s) => s.foreach { n => node_three ! Fail(n, curr) }
         case None => ()
       }
 
