@@ -1,14 +1,16 @@
+import Group.Group
 import akka.actor._
 
 // these are all of the necessary case classes
-case class New(newActor:ActorRef)
-case class Fail(removeActor:ActorRef)
-case class Aggregate(aggregateActor:ActorRef, valueToAggregate:Int)
-case class Local(localAdd:Int)
-case class Status(actorOne:ActorRef, theStatus:Option[Int])
-case class SendAggregate()
-case class sendBroadcast()
-case class sendToSelf()
+case class New(newActor:ActorRef, operations: Group[Int])
+case class Fail(removeActor:ActorRef, operations: Group[Int])
+case class Aggregate(aggregateActor:ActorRef, valueToAggregate:Int, operations: Group[Int])
+case class Local(localAdd:Int, operations: Group[Int])
+case class Status(actorOne:ActorRef, theStatus:Option[Int], operations: Group[Int])
+case class Drop(actorRemove:ActorRef, removeVal:Int, operations: Group[Int])
+case class SendAggregate(operations: Group[Int])
+case class sendBroadcast(operations: Group[Int])
+case class sendToSelf(operations: Group[Int])
 
 // this is the class which the root/non-root will extend
 abstract class NodeActors extends Actor
