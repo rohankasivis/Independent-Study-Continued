@@ -5,7 +5,6 @@ import akka.util.Timeout
 import org.scalatest.WordSpecLike
 import org.scalatest.matchers.MustMatchers
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class AdvancedTest extends TestKit(ActorSystem("testSystem"))
@@ -15,15 +14,18 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
 {
   "A Root actor" must {
     // Creation of the TestActorRef
-    val actorRef = TestActorRef[Root]
+    val grp=new IntPlus
+
+    val actorRef =TestActorRef(new Root[Int](grp))
+    // val actorRef = TestActorRef[Root[Int]]
     var neighbors : Map[ActorRef, Set[ActorRef]] = Map.empty
 
     "receive messages" in {
       // This call is synchronous. The actor receive() method will be called in the current thread
-      val node_one = TestActorRef[NonRoot]
+      val node_one = TestActorRef(new NonRoot[Int](grp))
 
-      val curr:IntPlus = new IntPlus
-      actorRef ! New(node_one, curr)
+      // val curr:IntPlus = new IntPlus
+      actorRef ! New(node_one)
 
       val underLyingRootActor=actorRef.underlyingActor
       underLyingRootActor.isAdjacentTo(node_one)
@@ -37,7 +39,7 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       underLyingNodeOneActor.getParent must equal(Option(actorRef))
 
       // pass a value to Root Actor
-      actorRef ! Local(2, curr)
+      actorRef ! Local(2)
 
       underLyingRootActor.getLocalMass must equal(2)
       underLyingRootActor.getAggregateMass must equal(2)
@@ -45,7 +47,7 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       // pass a value to the child Actor
 
 
-      node_one ! Local(5, curr)
+      node_one ! Local(5)
       underLyingNodeOneActor.getLocalMass must equal(5)
       within(200 millis) {
 
@@ -53,22 +55,22 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       }
 
       // send root node to child
-      node_one ! New(actorRef, curr)
+      node_one ! New(actorRef)
       underLyingNodeOneActor.getBalanceFor(actorRef) must equal(Some(0))
-      node_one ! SendAggregate(curr)
+      node_one ! SendAggregate()
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(7)
       }
       // make sure the root does not get aggregated again
-      node_one ! SendAggregate(curr)
+      node_one ! SendAggregate()
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(7)
       }
 
       // send a new value to child
-      node_one ! Local(7, curr)
+      node_one ! Local(7)
       underLyingNodeOneActor.getLocalMass must equal(7)
-      node_one ! SendAggregate(curr)
+      node_one ! SendAggregate()
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(9)
       }
@@ -76,29 +78,31 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
   }
 
   "A Non Root actor" must {
+    val grp=new IntPlus
     // Creation of the TestActorRef
-    val actorRef = TestActorRef[Root]
+    val actorRef = TestActorRef(new Root[Int](grp))
     var neighbors : Map[ActorRef, Set[ActorRef]] = Map.empty
 
     "receive messages" in {
+
       // This call is synchronous. The actor receive() method will be called in the current thread
-      val node_one = TestActorRef[NonRoot]
+      val node_one = TestActorRef(new NonRoot[Int](grp))
       //val node_one = system.actorOf(Props(new NonRoot()), name = "node_one")
-      val node_two = TestActorRef[NonRoot]
+      val node_two = TestActorRef(new NonRoot[Int](grp))
       //val node_two = system.actorOf(Props(new NonRoot()), name = "node_two")
-      val node_three = TestActorRef[NonRoot]
+      val node_three = TestActorRef(new NonRoot[Int](grp))
       //val node_three = system.actorOf(Props(new NonRoot()), name = "node_three")
-      val node_four = TestActorRef[NonRoot]
-      val node_five = TestActorRef[NonRoot]
-      val node_six = TestActorRef[NonRoot]
-      val node_seven = TestActorRef[NonRoot]
-      val node_eight = TestActorRef[NonRoot]
-      val node_nine = TestActorRef[NonRoot]
-      val node_ten = TestActorRef[NonRoot]
+      val node_four = TestActorRef(new NonRoot[Int](grp))
+      val node_five = TestActorRef(new NonRoot[Int](grp))
+      val node_six = TestActorRef(new NonRoot[Int](grp))
+      val node_seven = TestActorRef(new NonRoot[Int](grp))
+      val node_eight = TestActorRef(new NonRoot[Int](grp))
+      val node_nine = TestActorRef(new NonRoot[Int](grp))
+      val node_ten = TestActorRef(new NonRoot[Int](grp))
 
       val curr:IntPlus = new IntPlus
       implicit val timeout = Timeout(0 seconds)
-      actorRef ! New(node_one, curr)
+      actorRef ! New(node_one)
 
       val originalunderlyingActor = actorRef.underlyingActor
       within(200 milliseconds) {
@@ -106,7 +110,7 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
         expectMsg(true)
       }
 
-      actorRef ! New(node_two, curr)
+      actorRef ! New(node_two)
 
       within(200 milliseconds) {
         originalunderlyingActor.isAdjacentTo(node_two)
@@ -124,82 +128,82 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       val underlyingninenode = node_nine.underlyingActor
       val underlyingtennode = node_ten.underlyingActor
 
-      actorRef ! New(node_one, curr)
-      actorRef ! New(node_two, curr)
-      node_one ! New(actorRef, curr)
-      node_one ! New(node_three, curr)
-      node_two ! New(actorRef, curr)
-      node_two ! New(node_two, curr)
-      node_two ! New(node_four, curr)
-      node_three ! New(node_one, curr)
-      node_three ! New(node_two, curr)
-      node_three ! New(node_five, curr)
-      node_four ! New(node_one, curr)
-      node_four ! New(node_two, curr)
-      node_four ! New(node_three, curr)
-      node_four ! New(node_six, curr)
-      node_four ! New (node_seven, curr)
-      node_four ! New (node_eight, curr)
-      node_five ! New(node_two, curr)
-      node_five ! New(node_three, curr)
-      node_five ! New(node_four, curr)
-      node_five ! New(node_eight, curr)
-      node_five ! New(node_nine, curr)
-      node_six ! New(node_two, curr)
-      node_six ! New(node_three, curr)
-      node_six ! New(node_four, curr)
-      node_six ! New(node_five, curr)
-      node_six ! New(node_ten, curr)
-      node_seven ! New(node_one, curr)
-      node_seven ! New(node_three, curr)
-      node_seven ! New(node_four, curr)
-      node_seven !  New(node_five, curr)
-      node_seven ! New(node_six, curr)
-      node_eight ! New(node_one, curr)
-      node_eight ! New(node_four, curr)
-      node_eight ! New(node_five, curr)
-      node_eight ! New(node_seven, curr)
+      actorRef ! New(node_one)
+      actorRef ! New(node_two)
+      node_one ! New(actorRef)
+      node_one ! New(node_three)
+      node_two ! New(actorRef)
+      node_two ! New(node_two)
+      node_two ! New(node_four)
+      node_three ! New(node_one)
+      node_three ! New(node_two)
+      node_three ! New(node_five)
+      node_four ! New(node_one)
+      node_four ! New(node_two)
+      node_four ! New(node_three)
+      node_four ! New(node_six)
+      node_four ! New (node_seven)
+      node_four ! New (node_eight)
+      node_five ! New(node_two)
+      node_five ! New(node_three)
+      node_five ! New(node_four)
+      node_five ! New(node_eight)
+      node_five ! New(node_nine)
+      node_six ! New(node_two)
+      node_six ! New(node_three)
+      node_six ! New(node_four)
+      node_six ! New(node_five)
+      node_six ! New(node_ten)
+      node_seven ! New(node_one)
+      node_seven ! New(node_three)
+      node_seven ! New(node_four)
+      node_seven !  New(node_five)
+      node_seven ! New(node_six)
+      node_eight ! New(node_one)
+      node_eight ! New(node_four)
+      node_eight ! New(node_five)
+      node_eight ! New(node_seven)
 
-      node_nine ! New(node_two, curr)
-      node_nine ! New(node_five, curr)
-      node_nine ! New(node_six, curr)
-      node_nine ! New(node_seven, curr)
-      node_ten  ! New(node_three, curr)
-      node_ten  ! New(node_six, curr)
-      node_ten  ! New(node_nine, curr)
+      node_nine ! New(node_two)
+      node_nine ! New(node_five)
+      node_nine ! New(node_six)
+      node_nine ! New(node_seven)
+      node_ten  ! New(node_three)
+      node_ten  ! New(node_six)
+      node_ten  ! New(node_nine)
 
-      actorRef ! Local(2, curr)
+      actorRef ! Local(2)
       originalunderlyingActor.getLocalMass must equal (2)
       originalunderlyingActor.getAggregateMass must equal (2)
 
-      node_one ! Local(5, curr)
+      node_one ! Local(5)
       underlyingonenode.getLocalMass must equal (5)
 
-      node_two ! Local(10, curr)
+      node_two ! Local(10)
       underlyingtwonode.getLocalMass must equal(10)
 
-      node_three ! Local(7, curr)
+      node_three ! Local(7)
       underlyingthreenode.getLocalMass must equal(7)
 
-      node_four ! Local(13, curr)
+      node_four ! Local(13)
 
-      node_five ! Local(4, curr)
-      node_six ! Local(6, curr)
-      node_seven ! Local(17, curr)
-      node_eight ! Local(23, curr)
-      node_nine ! Local(11, curr)
-      node_ten ! Local(39, curr)
+      node_five ! Local(4)
+      node_six ! Local(6)
+      node_seven ! Local(17)
+      node_eight ! Local(23)
+      node_nine ! Local(11)
+      node_ten ! Local(39)
 
-      node_one ! sendToSelf(curr)
-      node_two ! sendToSelf(curr)
-      node_three ! sendToSelf(curr)
-      node_four ! sendToSelf(curr)
-      node_five ! sendToSelf(curr)
-      node_six ! sendToSelf(curr)
-      node_seven ! sendToSelf(curr)
-      node_eight ! sendToSelf(curr)
-      node_nine ! sendToSelf(curr)
-      node_ten ! sendToSelf(curr)
+      node_one ! sendToSelf()
+      node_two ! sendToSelf()
+      node_three ! sendToSelf()
+      node_four ! sendToSelf()
+      node_five ! sendToSelf()
+      node_six ! sendToSelf()
+      node_seven ! sendToSelf()
+      node_eight ! sendToSelf()
+      node_nine ! sendToSelf()
+      node_ten ! sendToSelf()
 
       Thread.sleep(12000)
       originalunderlyingActor.getAggregateMass must equal(137)
@@ -215,7 +219,7 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
 
       // over here, we go through all of the individual nodes and send the fail messages appropriately
       neighbors.get(node_one) match {
-        case Some(s) => s.foreach { n => node_one ! Fail(n, curr) }
+        case Some(s) => s.foreach { n => node_one ! Fail(n) }
         case None => ()
       }
       //system stop node_one
@@ -223,7 +227,7 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       neighbors.contains(node_one) must equal (false)
 
       neighbors.get(node_two) match {
-        case Some(s) => s.foreach { n => node_two ! Fail(n, curr) }
+        case Some(s) => s.foreach { n => node_two ! Fail(n) }
         case None => ()
       }
 
@@ -231,7 +235,7 @@ class AdvancedTest extends TestKit(ActorSystem("testSystem"))
       neighbors.contains(node_two) must equal (false)
 
       neighbors.get(node_three) match {
-        case Some(s) => s.foreach { n => node_three ! Fail(n, curr) }
+        case Some(s) => s.foreach { n => node_three ! Fail(n) }
         case None => ()
       }
 
