@@ -1,12 +1,9 @@
-import javafx.print.Printer
-
 import Group.Group
 import akka.actor.{ActorRef, Cancellable}
-import akka.event.slf4j.Logger
 
 import scala.concurrent.duration.Duration
 
-class NonRoot extends NodeActors {
+class NonRoot[A](group:Group[A]) extends NodeActors[A](group:Group[A]) {
 
   import context.dispatcher
 
@@ -17,6 +14,7 @@ class NonRoot extends NodeActors {
     if (hasStartedSelfSend)
       deliverToSelf.cancel()
   }
+
 
   // added by Karl
   def parent(nodeActors: Set[ActorRef], levels: Map[ActorRef, Int]): Option[ActorRef] = {
@@ -67,21 +65,21 @@ class NonRoot extends NodeActors {
     }
   }
 
-  def broadcast_var(operations: Group[Int]) {
+  def broadcast_var() {
     if (isEnabled)
       println("Value of broadcast : " + broadcast + " in ActorRef: " + self.toString())
     if (broadcast) {
       if (isEnabled)
         println("Entering broadcast_var")
       for(curr <- adjacent)
-        curr ! Status(self, level(adjacent, levels), operations)
+        curr ! Status(self, level(adjacent, levels))
       broadcast = false
       if (isEnabled)
         println("Exiting broadcast_var")
     }
   }
 
-  def handle_aggregate(operations: Group[Int]) = {
+  def handle_aggregate() = {
     val res: Option[ActorRef] = parent(adjacent, levels)
     res match {
       case Some(value) =>
@@ -91,16 +89,16 @@ class NonRoot extends NodeActors {
               println("Self :" + self.toString() + "levels size :" + levels.size + " adjacent size:" + adjacent.size)
               println(self.toString() + " sending Aggregate(" + aggregate_mass + ") to " + res.get.toString())
             }
-            res.get ! Aggregate(self, aggregate_mass, operations)
-            balance = balance + (res.get -> (operations.op(balance.get(res.get).get, aggregate_mass)))
-            aggregate_mass = 0
+            res.get ! Aggregate(self, aggregate_mass)
+            balance = balance + (res.get -> (innerGroup.op(balance.get(res.get).get, aggregate_mass)))
+            aggregate_mass = 0.asInstanceOf[A]
           case None => // do nothing
         }
       case None => // do nothing
     }
   }
 
-  def handle_new(newActor: ActorRef, operations: Group[Int]) =
+  def handle_new(newActor: ActorRef) =
   {
     //    System.out.println ("Start Calling in NonRoot Case New :" + arg1.toString () )
     val first: Option[Int] = level (adjacent, levels) match {
@@ -109,17 +107,17 @@ class NonRoot extends NodeActors {
     }
     if (first.get != - 1) {
       // then the level does exist
-      newActor ! Status(self, first, operations)
+      newActor ! Status(self, first)
     }
     adjacent += newActor
-    balance = balance + (newActor -> 0)
+    balance = balance + (newActor -> 0.asInstanceOf[A])
     if(isEnabled)
       println("adjacent size in self :"+self.toString()+" " +adjacent.size)
     //      System.out.println ("Finish Calling in NonRoot Case New :" + self.toString () )
     sender ! true
   }
 
-  def handle_fail(removeActor: ActorRef, operations: Group[Int]) =
+  def handle_fail(removeActor: ActorRef) =
   {
     balance.get(removeActor) match
     {
@@ -136,7 +134,7 @@ class NonRoot extends NodeActors {
 
             adjacent -= removeActor
             levels = levels.filterKeys (_!= removeActor)
-            aggregate_mass = operations.op(aggregate_mass, balance.get(removeActor).get)
+            aggregate_mass = innerGroup.op(aggregate_mass, balance.get(removeActor).get)
             if(isEnabled)
               System.out.println ("Inside Fail")
           case None => None
@@ -145,33 +143,33 @@ class NonRoot extends NodeActors {
     }
   }
 
-  def handle_agg_message(aggregateActor: ActorRef, valueToAdd: Int, operations: Group[Int]) =
+  def handle_agg_message(aggregateActor: ActorRef, valueToAdd: A) =
   {
     if(isEnabled)
       println ("received Aggregate(" + valueToAdd + ") from " + aggregateActor.toString () )
-    aggregate_mass = operations.op(aggregate_mass, valueToAdd)
+    aggregate_mass = innerGroup.op(aggregate_mass, valueToAdd)
     if(isEnabled)
       println ("Aggregate Mass value = " + aggregate_mass)
     balance.get (aggregateActor) match {
       case Some (s) =>
-        balance = balance + (aggregateActor -> (operations.op(balance.get(aggregateActor).get, operations.inverse(valueToAdd))))
+        balance = balance + (aggregateActor -> (innerGroup.op(balance.get(aggregateActor).get, innerGroup.inverse(valueToAdd))))
       case None => 0
     }
-    handle_aggregate(operations)
+    handle_aggregate()
   }
 
-  def handle_local(localAdd:Int, operations: Group[Int]) =
+  def handle_local(localAdd:A) =
   {
     if(isEnabled)
       println("Received Aggregate in "+self.toString()+" node : " + localAdd)
-    aggregate_mass = operations.op(aggregate_mass, operations.op(localAdd, operations.inverse(local_mass)))
+    aggregate_mass = innerGroup.op(aggregate_mass, innerGroup.op(localAdd, innerGroup.inverse(local_mass)))
     if(isEnabled)
       println(" Aggregate in "+self.toString()+" node  :"+aggregate_mass)
 
     local_mass = localAdd
   }
 
-  def handle_status(actorOne:ActorRef, arg2:Option[Int], operations: Group[Int]) =
+  def handle_status(actorOne:ActorRef, arg2:Option[Int]) =
   {
     // check the adjacent contains the passed in arg1 if not
     // add it
@@ -196,37 +194,39 @@ class NonRoot extends NodeActors {
   }
 
   def receive: Receive = {
-    case New(newActor, operations) =>
-      handle_new(newActor, operations)
+    case New(newActor) =>
+      handle_new(newActor)
 
-    case Fail(removeActor, operations) =>
-      handle_fail(removeActor, operations)
+    case Fail(removeActor) =>
+      handle_fail(removeActor)
 
-    case Aggregate(aggregateActor, valueToAggregate, operations) =>
-      handle_agg_message(aggregateActor,valueToAggregate, operations)
+    case Aggregate(aggregateActor, valueToAggregate) =>
+      handle_agg_message(aggregateActor,valueToAggregate.asInstanceOf[A])
 
-    case Local(localAdd, operations) =>
-      handle_local(localAdd, operations)
+    case Local(localAdd) =>
+      handle_local(localAdd.asInstanceOf[A])
 
-    case SendAggregate(operations) => {
-      handle_aggregate(operations)
+    case SendAggregate() => {
+      handle_aggregate()
     }
 
-    case sendBroadcast(operations) => {
-      broadcast_var(operations)
+    case sendBroadcast() => {
+      broadcast_var()
     }
 
-    case Status(actorOne, theStatus, operations) =>
-      handle_status(actorOne, theStatus, operations)
+    case Status(actorOne, theStatus) =>
+      handle_status(actorOne, theStatus)
 
-    case sendToSelf(operations) =>
+    case sendToSelf() =>
     {
       if(!hasStartedSelfSend)
       {
-        deliverToSelf = context.system.scheduler.schedule(Duration(500, "millis"), Duration(1000, "millis"), self, SendAggregate(operations))
-        deliverToSelf = context.system.scheduler.schedule(Duration(500, "millis"), Duration(1000, "millis"), self, sendBroadcast(operations))
+        deliverToSelf = context.system.scheduler.schedule(Duration(500, "millis"), Duration(1000, "millis"), self, SendAggregate())
+        deliverToSelf = context.system.scheduler.schedule(Duration(500, "millis"), Duration(1000, "millis"), self, sendBroadcast())
         hasStartedSelfSend = true
       }
     }
   }
+  override protected val innerGroup: Group[A] = group
+
 }

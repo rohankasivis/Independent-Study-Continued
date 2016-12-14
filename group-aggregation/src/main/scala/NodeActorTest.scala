@@ -3,12 +3,10 @@
 * case classes work properly in order to produce the correct result.
 * */
 
-import java.util.concurrent.TimeUnit
-
 import Group.IntPlus
 import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.util.Timeout
 import akka.pattern.ask
+import akka.util.Timeout
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -17,48 +15,49 @@ object NodeActorTest extends App
 {
   var neighbors : Map[ActorRef, Set[ActorRef]] = Map.empty
   val system = ActorSystem("NeighborSetSystem")
+  val grp=new IntPlus
 
-  val root_node = system.actorOf(Props[Root], name="root_node")
-  val node_one = system.actorOf(Props(new NonRoot()), name="node_one")
-  val node_two = system.actorOf(Props(new NonRoot()), name="node_two")
-  val node_three = system.actorOf(Props(new NonRoot()), name="node_three")
+  val root_node = system.actorOf(Props(new Root[Int](grp)), name="root_node")
+  val node_one = system.actorOf(Props(new NonRoot[Int](grp)), name="node_one")
+  val node_two = system.actorOf(Props(new NonRoot[Int](grp)), name="node_two")
+  val node_three = system.actorOf(Props(new NonRoot[Int](grp)), name="node_three")
 
   implicit val timeout = Timeout(5 seconds)
   val curr: IntPlus = new IntPlus
-  val future_rootone = root_node ? New(node_one, curr)
+  val future_rootone = root_node ? New(node_one)
   val result_rootone = Await.ready(future_rootone, timeout.duration)
-  val future_roottwo = root_node ? New(node_two, curr)
+  val future_roottwo = root_node ? New(node_two)
   val result_roottwo = Await.ready(future_roottwo, timeout.duration)
 
-  val future_oneroot = node_one ? New(root_node, curr)
+  val future_oneroot = node_one ? New(root_node)
   val result_oneroot = Await.ready(future_oneroot, timeout.duration)
-  val future_onethree = node_one ? New(node_three, curr)
+  val future_onethree = node_one ? New(node_three)
   val result_onethree = Await.ready(future_onethree, timeout.duration)
 
-  val future_tworoot = node_two ? New(root_node, curr)
+  val future_tworoot = node_two ? New(root_node)
   val result_tworoot = Await.ready(future_tworoot, timeout.duration)
-  val future_twothree = node_two ? New(node_two, curr)
+  val future_twothree = node_two ? New(node_two)
   val result_twothree = Await.ready(future_twothree, timeout.duration)
 
-  val future_threeone = node_three ? New(node_one, curr)
+  val future_threeone = node_three ? New(node_one)
   val result_threeone = Await.ready(future_threeone, timeout.duration)
-  val future_threetwo = node_three ? New(node_two, curr)
+  val future_threetwo = node_three ? New(node_two)
   val result_threetwo = Await.ready(future_threetwo, timeout.duration)
 
   // just check with four local statements and make sure the summation takes place correctly
-  root_node ! Local(2, curr)
-  node_one ! Local(5, curr)
-  node_two ! Local(10, curr)
-  node_three ! Local(7, curr)
+  root_node ! Local(2 )
+  node_one ! Local(5 )
+  node_two ! Local(10 )
+  node_three ! Local(7 )
 
   node_one ! sendToSelf
   node_one ! sendToSelf
   node_two ! sendToSelf
   node_three ! sendToSelf
 
-  node_one ! sendBroadcast(curr)
-  node_two ! sendBroadcast(curr)
-  node_three ! sendBroadcast(curr)
+  node_one ! sendBroadcast()
+  node_two ! sendBroadcast()
+  node_three ! sendBroadcast()
 
   // over here, set up the connection map
   neighbors = neighbors + (node_one -> Set(root_node, node_three))
@@ -67,7 +66,7 @@ object NodeActorTest extends App
 
   // over here, we go through all of the individual nodes and send the fail messages appropriately
   neighbors.get(node_one) match {
-    case Some(s) => s.foreach { n => node_one ! Fail(n, curr) }
+    case Some(s) => s.foreach { n => node_one ! Fail(n) }
     case None => ()
   }
   //system stop node_one
@@ -75,14 +74,14 @@ object NodeActorTest extends App
 
 
   neighbors.get(node_two) match {
-    case Some(s) => s.foreach { n => node_two ! Fail(n, curr) }
+    case Some(s) => s.foreach { n => node_two ! Fail(n) }
     case None => ()
   }
   //system stop node_two
   neighbors = neighbors - node_two
 
   neighbors.get(node_three) match {
-    case Some(s) => s.foreach { n => node_three ! Fail(n, curr) }
+    case Some(s) => s.foreach { n => node_three ! Fail(n) }
     case None => ()
   }
   //system stop node_three
