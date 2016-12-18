@@ -90,7 +90,7 @@ class NonRoot[A](group:Group[A]) extends NodeActors[A](group:Group[A]) {
               println(self.toString() + " sending Aggregate(" + aggregate_mass + ") to " + res.get.toString())
             }
             res.get ! Aggregate(self, aggregate_mass)
-            balance = balance + (res.get -> (innerGroup.op(balance.get(res.get).get, aggregate_mass)))
+            balance = balance + (res.get -> (group.op(balance.get(res.get).get, aggregate_mass)))
             aggregate_mass = 0.asInstanceOf[A]
           case None => // do nothing
         }
@@ -119,27 +119,22 @@ class NonRoot[A](group:Group[A]) extends NodeActors[A](group:Group[A]) {
 
   def handle_fail(removeActor: ActorRef) =
   {
-    balance.get(removeActor) match
-    {
+    balance.get(removeActor) match {
       case Some(s) =>
-        balance.get(removeActor) match {
-          case Some(s) =>
-            if(isEnabled) {
-              System.out.println("Inside Fail")
-              println("Fail message received from " + removeActor.toString() + " to ActorRef :" + self.toString())
-            }
-
-            if (level (adjacent, levels) != level (adjacent - removeActor, levels.filterKeys (_!= removeActor)) )
-              broadcast = true
-
-            adjacent -= removeActor
-            levels = levels.filterKeys (_!= removeActor)
-            aggregate_mass = innerGroup.op(aggregate_mass, balance.get(removeActor).get)
-            if(isEnabled)
-              System.out.println ("Inside Fail")
-          case None => None
+        if (isEnabled) {
+          System.out.println("Inside Fail")
+          println("Fail message received from " + removeActor.toString() + " to ActorRef :" + self.toString())
         }
-      case None => None
+
+        if (level(adjacent, levels) != level(adjacent - removeActor, levels.filterKeys(_ != removeActor)))
+          broadcast = true
+
+        adjacent -= removeActor
+        levels = levels.filterKeys(_ != removeActor)
+        aggregate_mass = group.op(aggregate_mass, balance.get(removeActor).get)
+        if (isEnabled)
+          System.out.println("Inside Fail")
+        case None => None
     }
   }
 
@@ -147,12 +142,12 @@ class NonRoot[A](group:Group[A]) extends NodeActors[A](group:Group[A]) {
   {
     if(isEnabled)
       println ("received Aggregate(" + valueToAdd + ") from " + aggregateActor.toString () )
-    aggregate_mass = innerGroup.op(aggregate_mass, valueToAdd)
+    aggregate_mass = group.op(aggregate_mass, valueToAdd)
     if(isEnabled)
       println ("Aggregate Mass value = " + aggregate_mass)
     balance.get (aggregateActor) match {
       case Some (s) =>
-        balance = balance + (aggregateActor -> (innerGroup.op(balance.get(aggregateActor).get, innerGroup.inverse(valueToAdd))))
+        balance = balance + (aggregateActor -> (group.op(balance.get(aggregateActor).get, group.inverse(valueToAdd))))
       case None => 0
     }
     handle_aggregate()
@@ -162,7 +157,7 @@ class NonRoot[A](group:Group[A]) extends NodeActors[A](group:Group[A]) {
   {
     if(isEnabled)
       println("Received Aggregate in "+self.toString()+" node : " + localAdd)
-    aggregate_mass = innerGroup.op(aggregate_mass, innerGroup.op(localAdd, innerGroup.inverse(local_mass)))
+    aggregate_mass = group.op(aggregate_mass, group.op(localAdd, group.inverse(local_mass)))
     if(isEnabled)
       println(" Aggregate in "+self.toString()+" node  :"+aggregate_mass)
 
@@ -186,9 +181,8 @@ class NonRoot[A](group:Group[A]) extends NodeActors[A](group:Group[A]) {
       adjacent += actorOne
     }
     levels += (actorOne -> arg2.get)
-    if (level (adjacent, levels) != level (adjacent, levels.filterKeys (_!= actorOne)) )
+    if (level (adjacent, levels) != level (adjacent, levels.filterKeys (_!= actorOne)))
       broadcast = true
-    //  levels = levels.filterKeys(_ != arg1)
     if(isEnabled)
       System.out.println ("Stop Calling in NonRoot Case Status :" + actorOne.toString () )
   }
@@ -227,6 +221,4 @@ class NonRoot[A](group:Group[A]) extends NodeActors[A](group:Group[A]) {
       }
     }
   }
-  override protected val innerGroup: Group[A] = group
-
 }

@@ -16,12 +16,11 @@ abstract class NodeActors[A](group:Group[A]) extends Actor
 {
   protected var levels:Map[ActorRef, Int] = Map.empty
   protected var balance:Map[ActorRef, A] = Map.empty
-  protected var local_mass:A=0.asInstanceOf[A]
-  protected var aggregate_mass:A=0.asInstanceOf[A]
+  protected var local_mass:A=group.id
+  protected var aggregate_mass:A=group.id
   protected var adjacent:Set[ActorRef] = Set.empty
   protected var broadcast:Boolean = false
   protected val isEnabled = sys.props.get("DEBUG").getOrElse("false").toBoolean
-  protected val innerGroup:Group[A]
 
   val system = ActorSystem("NodeActors")
 

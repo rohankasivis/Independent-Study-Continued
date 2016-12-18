@@ -42,23 +42,28 @@ class Root[A](group:Group[A]) extends NodeActors[A](group:Group[A])
   }
 
   def handle_fail(removeActor: ActorRef) = {
-    adjacent -= removeActor
-    aggregate_mass = innerGroup.op(aggregate_mass, balance.get(removeActor).get)
+    balance.get(removeActor) match {
+      case Some(s) =>
+        adjacent -= removeActor
+        aggregate_mass = group.op(aggregate_mass, balance.get(removeActor).get)
+      case None => None
+    }
+
   }
 
   def handle_agg_message(aggregateActor: ActorRef, valueToAggregate: A) = {
     if (isEnabled)
       println("received Aggregate(" + valueToAggregate + ") from " + aggregateActor.toString())
-    aggregate_mass = innerGroup.op(aggregate_mass, valueToAggregate)
+    aggregate_mass = group.op(aggregate_mass, valueToAggregate)
     if (isEnabled)
       println("Aggregate Mass value = " + aggregate_mass)
-    balance = balance + (aggregateActor -> (innerGroup.op(balance.get(aggregateActor).get, innerGroup.inverse(valueToAggregate)))) // reassignment of received mass to modify index
+    balance = balance + (aggregateActor -> (group.op(balance.get(aggregateActor).get, group.inverse(valueToAggregate)))) // reassignment of received mass to modify index
   }
 
   def handle_local(localAdd: A) = {
     if (isEnabled)
       println("Received Aggregate in root node :" + localAdd)
-    aggregate_mass = innerGroup.op(aggregate_mass, innerGroup.op(localAdd, innerGroup.inverse(local_mass)))
+    aggregate_mass = group.op(aggregate_mass, group.op(localAdd, group.inverse(local_mass)))
     if (isEnabled)
       println(" Aggregate in root node :" + aggregate_mass)
     local_mass = localAdd
@@ -81,7 +86,4 @@ class Root[A](group:Group[A]) extends NodeActors[A](group:Group[A])
       // dont do anything here
     }
   }
-
-  override protected val innerGroup: Group[A] = group
-
 }
