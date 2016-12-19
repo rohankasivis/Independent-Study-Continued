@@ -91,7 +91,7 @@ class NonRoot[A](group:Group[A]) extends NodeActors[A](group:Group[A]) {
             }
             res.get ! Aggregate(self, aggregate_mass)
             balance = balance + (res.get -> (group.op(balance.get(res.get).get, aggregate_mass)))
-            aggregate_mass = 0.asInstanceOf[A]
+            aggregate_mass = group.id
           case None => // do nothing
         }
       case None => // do nothing
@@ -110,7 +110,7 @@ class NonRoot[A](group:Group[A]) extends NodeActors[A](group:Group[A]) {
       newActor ! Status(self, first)
     }
     adjacent += newActor
-    balance = balance + (newActor -> 0.asInstanceOf[A])
+    balance = balance + (newActor -> group.id)
     if(isEnabled)
       println("adjacent size in self :"+self.toString()+" " +adjacent.size)
     //      System.out.println ("Finish Calling in NonRoot Case New :" + self.toString () )
@@ -134,7 +134,7 @@ class NonRoot[A](group:Group[A]) extends NodeActors[A](group:Group[A]) {
         aggregate_mass = group.op(aggregate_mass, balance.get(removeActor).get)
         if (isEnabled)
           System.out.println("Inside Fail")
-        case None => None
+      case None => None
     }
   }
 

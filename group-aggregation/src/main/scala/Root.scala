@@ -35,7 +35,7 @@ class Root[A](group:Group[A]) extends NodeActors[A](group:Group[A])
       System.out.println("Start Calling in Root Case New :" + newActor.toString())
     newActor ! Status(self, Some(0)) // passing in a status of level 0 to the send function
     adjacent += newActor
-    balance = balance + (newActor -> 0.asInstanceOf[A])
+    balance = balance + (newActor -> group.id)
     if (isEnabled)
       System.out.println("Stop Calling in Root Case New :" + newActor.toString())
     sender ! true
