@@ -55,7 +55,7 @@ class AdvancedMultiTest extends TestKit(ActorSystem("testSystem"))
 
       // send root node to child
       node_one ! New(actorRef)
-      underLyingNodeOneActor.getBalanceFor(actorRef) must equal(Some(0))
+      underLyingNodeOneActor.getBalanceFor(actorRef) must equal(Some(1))
       node_one ! SendAggregate()
       within(200 millis) {
         underLyingRootActor.getAggregateMass must equal(10)
