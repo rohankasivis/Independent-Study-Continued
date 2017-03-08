@@ -3,6 +3,8 @@ Part 1
 
 Implement the [GAP protocol](http://www.csc.kth.se/~mfd/Papers/RVK05.pdf), similar to how I implemented the original tree based protocol. Add testing classes using ScalaTest once done, and then compare performance to the original one with ScalaTest (on a local machine with multiple nodes).
 
+Read about [other protocols](http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6894544).
+
 Part 2
 ------
 
