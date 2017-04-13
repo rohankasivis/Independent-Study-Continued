@@ -8,15 +8,15 @@ class GAPNode[A](monoid:Monoid[A]) extends GAPNodeActors[A](monoid:Monoid[A]){
 
   def receive: Receive = {
     case NewM(newActor, isRoot) =>
-      utils_use.new_entry(newActor, isRoot)
+      table = utils_use.new_entry(newActor, isRoot, table)
 
     case FailM(removeActor) =>
-      utils_use.remove_entry(removeActor)
+      table = utils_use.remove_entry(removeActor, table)
 
     case WeightM(weightM) =>
-      utils_use.handle_weight(weightM.asInstanceOf[A])
+      table = utils_use.handle_weight(weightM.asInstanceOf[A], table)
 
     case UpdateM(updateActor, weight, level, parent) =>
-      utils_use.update_entry(updateActor, weight.asInstanceOf[A], level, parent)
+      table = utils_use.update_entry(updateActor, weight.asInstanceOf[A], level, parent, table)
   }
 }
