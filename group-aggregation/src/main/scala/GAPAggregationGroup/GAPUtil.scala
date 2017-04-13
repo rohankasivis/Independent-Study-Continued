@@ -41,14 +41,14 @@ class GAPUtil[A] (monoid: Monoid[A], var table:Map[ActorRef, Tuple3[The_Status, 
   def update_entry(updateActor:ActorRef, weight:A, level:Int, parent:ActorRef) = {
     if(table.get(updateActor).isEmpty)
       new_entry(updateActor, false)
-    table.get(parent).get._1.getId match {
-      case 0 =>
+    table.get(parent).get._1 match {
+      case Self() =>
         val addEntry:Tuple3[The_Status, Int, A] = Tuple3(Child(), level, weight)
         table += (updateActor -> addEntry)
-      case 1 =>
+      case Child() =>
         val addEntry:Tuple3[The_Status, Int, A] = Tuple3(Peer(), level, weight)
         table += (updateActor -> addEntry)
-      case 3 => None
+      case Peer() => None
     }
   }
 
