@@ -36,7 +36,7 @@ class GAPUtil[A] (monoid: Monoid[A]) {
   def remove_entry(removeActor:ActorRef, table:Map[ActorRef, Tuple3[The_Status, Int, A]]) = {
     table.get(removeActor) match {
       case Some((curr_status, level, weight)) =>
-        var new_table = table.filterKeys(_ != removeActor)
+        var new_table = table - removeActor
         new_table
       case None => table  // just return the original table without changes
     }

@@ -1,10 +1,19 @@
 import Monoid.Monoid
+import akka.actor.Actor.Receive
 import akka.actor.{ActorRef, Cancellable}
 
 import scala.concurrent.duration.Duration
 
-class GAPNode[A](monoid:Monoid[A]) extends GAPNodeActors[A](monoid:Monoid[A]){
+case class NewM(newActor:ActorRef, isRoot:Boolean)
+case class FailM(removeActor:ActorRef)
+case class UpdateM[A](updateActor:ActorRef, weight:A, level:Int, parent:ActorRef)
+case class WeightM[A](weight:A)
+
+class GAPNode[A](monoid:Monoid[A]){
   // helper functions
+
+  var table:Map[ActorRef, Tuple3[The_Status, Int, A]] = Map.empty
+  var utils_use:GAPUtil[A] = new GAPUtil(monoid:Monoid[A])
 
   def receive: Receive = {
     case NewM(newActor, isRoot) =>
