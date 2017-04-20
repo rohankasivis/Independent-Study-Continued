@@ -1,8 +1,8 @@
 package Group
 
-class MultiModulo11 extends Group[Int]{
-  def id: Int = 1
+import Monoid.MultiModuloEleven
 
+class MultiModulo11 extends MultiModuloEleven with Group[Int]{
   def inverse(a: Int): Int = {
     var m:Int = 11
     var t:Int = 0
@@ -23,8 +23,6 @@ class MultiModulo11 extends Group[Int]{
 
     if(x1 < 0)
       x1 = x1 + 11
-    return x1
+    x1
   }
-
-  def op(a: Int, b: Int): Int = (a * b) % 11
 }
