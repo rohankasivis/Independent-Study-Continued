@@ -1,6 +1,5 @@
 import Monoid.Monoid
-import akka.actor.Actor.Receive
-import akka.actor.{ActorRef, Cancellable}
+import akka.actor.{Actor, ActorRef, Cancellable}
 
 import scala.concurrent.duration.Duration
 
@@ -9,7 +8,7 @@ case class FailM(removeActor:ActorRef)
 case class UpdateM[A](updateActor:ActorRef, weight:A, level:Int, parent:ActorRef)
 case class WeightM[A](weight:A)
 
-class GAPNode[A](monoid:Monoid[A]){
+class GAPNode[A](monoid:Monoid[A]) extends Actor{
   // helper functions
 
   var table:Map[ActorRef, Tuple3[The_Status, Int, A]] = Map.empty
