@@ -29,8 +29,24 @@ class GAPUtil[A] (monoid: Monoid[A]) {
     }
   }
 
-  def getLevel(curr_actor:ActorRef, table:Map[ActorRef, Tuple3[The_Status, Int, A]]) = {
-    0 // for now
+  def getLevel(curr_actor:ActorRef, table:Map[ActorRef, Tuple3[The_Status, Int, A]]):Int = {
+    for(value <- table.keys)
+    {
+        if(curr_actor == value)
+        {
+          return table.get(curr_actor).get._2
+        }
+    }
+    -1
+  }
+
+  def getParent(table:Map[ActorRef, Tuple3[The_Status, Int, A]]):ActorRef = {
+    for(value <- table.keys)
+    {
+      if(table.get(value).get._1 == Par())
+        return value
+    }
+    return null
   }
 
   def remove_entry(removeActor:ActorRef, table:Map[ActorRef, Tuple3[The_Status, Int, A]]) = {
@@ -45,21 +61,37 @@ class GAPUtil[A] (monoid: Monoid[A]) {
   def update_entry(updateActor:ActorRef, weight:A, level:Int, parent:ActorRef, table:Map[ActorRef, Tuple3[The_Status, Int, A]]) = {
     if(table.get(updateActor).isEmpty)
       new_entry(updateActor, false, table)
-    table.get(parent).get._1 match {
-      case Self() =>
-        val addEntry:Tuple3[The_Status, Int, A] = Tuple3(Child(), level, weight)
+    else {
+      if(table.get(parent).get._1 == Self())
+      {
+        val addEntry: Tuple3[The_Status, Int, A] = Tuple3(Child(), level, weight)
+        print("here")
         var new_table = table + (updateActor -> addEntry)
         new_table
-      case Child() =>
-        val addEntry:Tuple3[The_Status, Int, A] = Tuple3(Peer(), level, weight)
-        var new_table = table + (updateActor -> addEntry)
-        new_table
-      case Peer() => table  // return the original table without much modification
+      }
+      else
+      {
+        if(table.get(updateActor).get._1 == Child())
+        {
+          val addEntry: Tuple3[The_Status, Int, A] = Tuple3(Peer(), level, weight)
+          var new_table = table + (updateActor -> addEntry)
+          new_table
+        }
+        else {
+          val addEntry: Tuple3[The_Status, Int, A] = Tuple3(table.get(updateActor).get._1, level, weight)
+          var new_table = table + (updateActor -> addEntry)
+          new_table
+        }
+      }
     }
   }
 
   def handle_weight(weight:A, table:Map[ActorRef, Tuple3[The_Status, Int, A]]) = {
     // empty for now
     table   // just return this for now
+  }
+
+  def restore_table_invariant() = {
+
   }
 }
