@@ -29,24 +29,36 @@ class GAPUtil[A] (monoid: Monoid[A]) {
     }
   }
 
+  // gets the level of the actor
   def getLevel(curr_actor:ActorRef, table:Map[ActorRef, Tuple3[The_Status, Int, A]]):Int = {
+    var minimum:Int = Int.MaxValue
     for(value <- table.keys)
     {
-        if(curr_actor == value)
-        {
-          return table.get(curr_actor).get._2
-        }
+      var curr_min:Int = table.get(value).get._2
+      if(curr_min < minimum)
+        minimum = curr_min
     }
-    -1
+    return minimum + 1
   }
 
+  // gets the actor's parent
   def getParent(table:Map[ActorRef, Tuple3[The_Status, Int, A]]):ActorRef = {
+    var minimum:Int = Int.MaxValue
+    if(table.size == 0 || table.size == 1)
+      return null
     for(value <- table.keys)
     {
-      if(table.get(value).get._1 == Par())
+      var curr_min:Int = table.get(value).get._2
+      if(curr_min < minimum)
+        minimum = curr_min
+    }
+
+    for(value <- table.keys)
+    {
+      if(table.get(value).get._2 == minimum)
         return value
     }
-    return null
+    null
   }
 
   def remove_entry(removeActor:ActorRef, table:Map[ActorRef, Tuple3[The_Status, Int, A]]) = {
