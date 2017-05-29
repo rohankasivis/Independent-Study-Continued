@@ -85,6 +85,7 @@ class GAPUtil[A] (monoid: Monoid[A]) {
     table   // just return this for now
   }
 
+// ----------------Helper functions----------------------------------------------
   def get_minimum(table:Map[ActorRef, Tuple3[The_Status, Int, A]]): Int = {
     var minimum:Int = Int.MaxValue
     for(value <- table.keys)
@@ -168,15 +169,57 @@ class GAPUtil[A] (monoid: Monoid[A]) {
 
   // makes sure only one parent exists, and if more than one does, replace the other one with an appropriate status
   def confirm_one_parent(table:Map[ActorRef, Tuple3[The_Status, Int, A]]):Map[ActorRef, Tuple3[The_Status, Int, A]] = {
-
+    var minimum:Int = get_minimum(table)
+    var new_table = table
+    for(value <- table.keys)
+    {
+      if(table.get(value).get._1 == Par())
+      {
+        // now check the level. if the level is the minimum, then its good.. otherwise an appropriate switch is necessary
+        if(table.get(value).get._2 != minimum)
+        {
+          new_table = switch_element(value, new_table)
+        }
+      }
+    }
+    // return the modified table here
+    new_table
   }
 
+  // makes sure only one self exists, and if more than one does, replace the other ones with appropriate status
   def confirm_one_self(table:Map[ActorRef, Tuple3[The_Status, Int, A]]):Map[ActorRef, Tuple3[The_Status, Int, A]] = {
-
+    var minimum:Int = get_minimum(table)
+    var new_table = table
+    for(value <- table.keys)
+    {
+      if(table.get(value).get._1 == Self())
+      {
+        // check the level and see if it = minimum + 1. make an appropriate switch if it does not
+        if(table.get(value).get._2 != (minimum + 1))
+        {
+          new_table = switch_element(value, new_table)
+        }
+      }
+    }
+    // return the modified table here
+    new_table
   }
 
+  // make sure no elements are repeated twice
   def confirm_no_repetition(table:Map[ActorRef, Tuple3[The_Status, Int, A]]):Map[ActorRef, Tuple3[The_Status, Int, A]] = {
+    // simply returns current table as of now, since this should not be a problem with maps?
+    // may modify if necessary
+    table
+  }
 
+  // switches the element as necessary and returns the modified table
+  def switch_element(switcher:ActorRef, table:Map[ActorRef, Tuple3[The_Status, Int, A]]):Map[ActorRef, Tuple3[The_Status, Int, A]] = {
+    // switch to peer for now.. see when to switch to child?
+    val curr_level:Int = table.get(switcher).get._2
+    val curr_weight:A = table.get(switcher).get._3
+    val addEntry: Tuple3[The_Status, Int, A] = Tuple3(Peer(), curr_level, curr_weight)
+    var new_table = table + (switcher -> addEntry)
+    new_table
   }
 
   // the main carry forward function
