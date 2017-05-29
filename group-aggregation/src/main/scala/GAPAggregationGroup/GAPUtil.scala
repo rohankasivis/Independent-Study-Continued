@@ -6,13 +6,13 @@ class GAPUtil[A] (monoid: Monoid[A]) {
   {
     if(isRoot && table.isEmpty)
     {
-      val addTuple:Tuple3[The_Status, Int, A] = Tuple3(Par(), 0, 0.asInstanceOf[A])
+      val addTuple:Tuple3[The_Status, Int, A] = Tuple3(Par(), -1, 0.asInstanceOf[A])
       var new_table = table + (newActor -> addTuple)
       new_table
     }
     else if(table.isEmpty)
     {
-      val addTuple:Tuple3[The_Status, Int, A] = Tuple3(Self(), getLevel(newActor, table), 0.asInstanceOf[A])
+      val addTuple:Tuple3[The_Status, Int, A] = Tuple3(Self(), 0, 0.asInstanceOf[A])
       var new_table = table + (newActor -> addTuple)
       new_table
     }
@@ -22,7 +22,7 @@ class GAPUtil[A] (monoid: Monoid[A]) {
         case Some((curr_string, level, weight)) =>
           table   // return the original table simply, no modification made
         case None =>
-          val adder:Tuple3[The_Status, Int, A] = Tuple3(Peer(), getLevel(newActor, table), 0.asInstanceOf[A])
+          val adder:Tuple3[The_Status, Int, A] = Tuple3(Peer(), 0, 0.asInstanceOf[A])
           var new_table = table + (newActor -> adder)
           new_table
       }
@@ -44,6 +44,7 @@ class GAPUtil[A] (monoid: Monoid[A]) {
     null
   }
 
+  // removes an entry from the table
   def remove_entry(removeActor:ActorRef, table:Map[ActorRef, Tuple3[The_Status, Int, A]]) = {
     table.get(removeActor) match {
       case Some((curr_status, level, weight)) =>
@@ -86,6 +87,7 @@ class GAPUtil[A] (monoid: Monoid[A]) {
   }
 
 // ----------------Helper functions----------------------------------------------
+  // gets the minimum value in a table
   def get_minimum(table:Map[ActorRef, Tuple3[The_Status, Int, A]]): Int = {
     var minimum:Int = Int.MaxValue
     for(value <- table.keys)

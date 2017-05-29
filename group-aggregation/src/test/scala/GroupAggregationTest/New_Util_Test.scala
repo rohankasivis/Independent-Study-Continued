@@ -36,53 +36,64 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
         var three_table:Map[ActorRef, Tuple3[The_Status, Int, Int]] = Map.empty
 
         // everything under new passes correctly
-        "test for new: " in {
+        "test for new: check first new with root node" in {
             // test_add_id
             // test first new here - with root node
             root_table = utils_use.new_entry(root_node, true, root_table)
             root_table.size must equal(1)
             root_table.get(root_node).get._1 must equal(Par())
-
+        }
+        "test for new: check first new on nonroot node" in {
             // test first new here - without root node
             one_table = utils_use.new_entry(node_one, false, one_table)
             one_table.size must equal(1)
             one_table.get(node_one).get._1 must equal(Self())
-
+        }
+        "test for new: check second new on root table (adding different elements)" in {
             // test second new here on root_table (adding different elements each time)
+            root_table = utils_use.new_entry(root_node, true, root_table)
             root_table = utils_use.new_entry(node_one, true, root_table)
             root_table.size must equal(2)
             root_table.get(node_one).get._1 must equal(Peer())
-
+        }
+        "test for new: check adding secnd new on one_table (adding the same element twice)" in {
             // test second new here on one_table (adding the same element twice)
+            one_table = utils_use.new_entry(node_one, false, one_table)
             one_table = utils_use.new_entry(node_one, false, one_table)
             one_table.size must equal(1)
         }
-        "test for remove " in {
-            root_table = utils_use.new_entry(root_node, true, root_table)
-            one_table = utils_use.new_entry(node_one, false, one_table)
-            root_table = utils_use.new_entry(node_one, true, root_table)
 
+        "test for remove: delete in root_table " in {
             // test for existing delete in root_table - size should be 1
+            root_table = utils_use.new_entry(root_node, true, root_table)
+            root_table = utils_use.new_entry(node_one, true, root_table)
             root_table = utils_use.remove_entry(node_one, root_table)
             root_table.size must equal(1)
-
+        }
+        "test for remove: nonexisting delete in root_table" in {
             // test for nonexisting delete in root_table - size should be 1
+            root_table = utils_use.new_entry(root_node, true, root_table)
             root_table = utils_use.remove_entry(node_three, root_table)
             root_table.size must equal(1)
-
+        }
+        "test for remove: nonexisting delete in one_table" in {
             // test for nonexisting delete in one_table - size should be 1
+            one_table = utils_use.new_entry(node_one, false, one_table)
             one_table = utils_use.remove_entry(node_two, one_table)
             one_table.size must equal(1)
-
-            // test for existing delete in root_table - size should be 0
+        }
+        "test for remove: existing delete in root_table" in {
+            // test for existing delete in root_table - size should be
+            root_table = utils_use.new_entry(root_node, true, root_table)
             root_table = utils_use.remove_entry(root_node, root_table)
             root_table.size must equal(0)
-
+        }
+        "test for remove: existing delete in one_table" in {
             // test for existing delete in one_table - size should be 0
+            one_table = utils_use.new_entry(node_one, false, one_table)
             one_table = utils_use.remove_entry(node_one, root_table)
             one_table.size must equal(0)
         }
-
         "test for update " in {
             root_table = utils_use.new_entry(root_node, true, root_table)
             one_table = utils_use.new_entry(node_one, false, one_table)
@@ -117,7 +128,27 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
 
         }
 
-        "test for weight " in {
+        "test for minimum " in {
+
+        }
+
+        "test for parent_min_val " in {
+
+        }
+
+        "test for handle_self_level " in {
+
+        }
+
+        "test for confirm_one_parent " in {
+
+        }
+
+        "test for confirm_one_self " in {
+
+        }
+
+        "test for restore_table_invariant " in {
 
         }
     }
