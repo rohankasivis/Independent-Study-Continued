@@ -40,7 +40,7 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             // test_add_id
             // test first new here - with root node
             root_table = utils_use.new_entry(root_node, true, root_table)
-            root_table.size must equal(1)
+            root_table.size must equal(2)
             root_table.get(root_node).get._1 must equal(Par())
         }
         "test for new: check first new on nonroot node" in {
@@ -53,7 +53,7 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             // test second new here on root_table (adding different elements each time)
             root_table = utils_use.new_entry(root_node, true, root_table)
             root_table = utils_use.new_entry(node_one, true, root_table)
-            root_table.size must equal(2)
+            root_table.size must equal(3)
             root_table.get(node_one).get._1 must equal(Peer())
         }
         "test for new: check adding secnd new on one_table (adding the same element twice)" in {
@@ -63,18 +63,19 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             one_table.size must equal(1)
         }
 
+        // make sure that everything under remove works
         "test for remove: delete in root_table " in {
             // test for existing delete in root_table - size should be 1
             root_table = utils_use.new_entry(root_node, true, root_table)
             root_table = utils_use.new_entry(node_one, true, root_table)
             root_table = utils_use.remove_entry(node_one, root_table)
-            root_table.size must equal(1)
+            root_table.size must equal(2)
         }
         "test for remove: nonexisting delete in root_table" in {
             // test for nonexisting delete in root_table - size should be 1
             root_table = utils_use.new_entry(root_node, true, root_table)
             root_table = utils_use.remove_entry(node_three, root_table)
-            root_table.size must equal(1)
+            root_table.size must equal(2)
         }
         "test for remove: nonexisting delete in one_table" in {
             // test for nonexisting delete in one_table - size should be 1
@@ -86,7 +87,7 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             // test for existing delete in root_table - size should be
             root_table = utils_use.new_entry(root_node, true, root_table)
             root_table = utils_use.remove_entry(root_node, root_table)
-            root_table.size must equal(0)
+            root_table.size must equal(1)
         }
         "test for remove: existing delete in one_table" in {
             // test for existing delete in one_table - size should be 0
@@ -94,6 +95,8 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             one_table = utils_use.remove_entry(node_one, root_table)
             one_table.size must equal(0)
         }
+
+        // make sure that everything under update works
         "test for update " in {
             root_table = utils_use.new_entry(root_node, true, root_table)
             one_table = utils_use.new_entry(node_one, false, one_table)
@@ -120,15 +123,63 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             root_table.get(node_two).get._1 must equal(Peer())
         }
 
-        "test for level " in {
+        // level tests
+        "test for level: check level in table with 1 element " in {
+          one_table = utils_use.new_entry(node_one, false, one_table)
+          utils_use.getLevel(node_one, one_table) must equal (Int.MinValue)
+        }
+        "test for level: check level in newly instantiated root table with 2 elements " in {
+          root_table = utils_use.new_entry(root_node, true, root_table)
+          utils_use.getLevel(root_node, root_table) must equal (0)
+        }
+        "test for level: check level in a root table with multiple elements" in {
+          root_table = utils_use.new_entry(root_node, true, root_table)
+          root_table = utils_use.new_entry(node_one, true, root_table)
+          root_table = utils_use.new_entry(node_two, true, root_table)
+          root_table = utils_use.new_entry(node_three, true, root_table)
+          utils_use.getLevel(root_node, root_table) must equal (0)
+        }
+        "test for level: check level in a nonroot table with multiple elements" in {
 
         }
 
-        "test for parent " in {
+        // parent tests
+        "test for parent: make sure no parent in table with 1 element" in {
+          one_table = utils_use.new_entry(node_one, false, one_table)
+          utils_use.getParent(one_table) must equal (null)
+        }
+        "test for parent: check parent in new root table with 2 elements" in {
+          root_table = utils_use.new_entry(root_node, true, root_table)
+          utils_use.getParent(root_table) must equal (root_node)
+        }
+        "test for parent: check parent in a root table with multiple elements" in {
+          root_table = utils_use.new_entry(root_node, true, root_table)
+          root_table = utils_use.new_entry(node_one, true, root_table)
+          root_table = utils_use.new_entry(node_two, true, root_table)
+          root_table = utils_use.new_entry(node_three, true, root_table)
+          utils_use.getParent(root_table) must equal (root_node)
+        }
+        "test for parent: check parent in a nonroot table with multiple elements" in {
 
         }
 
-        "test for minimum " in {
+        // minimum tests
+        "test for minimum: check min in table with 1 element" in {
+          one_table = utils_use.new_entry(node_one, false, one_table)
+          utils_use.get_minimum(one_table) must equal (0)
+        }
+        "test for minimum: check min in new root table with 2 elements" in {
+          root_table = utils_use.new_entry(root_node, true, root_table)
+          utils_use.get_minimum(root_table) must equal (-1)
+        }
+        "test for minimum: check min in a root table with multiple elements" in {
+          root_table = utils_use.new_entry(root_node, true, root_table)
+          root_table = utils_use.new_entry(node_one, true, root_table)
+          root_table = utils_use.new_entry(node_two, true, root_table)
+          root_table = utils_use.new_entry(node_three, true, root_table)
+          utils_use.get_minimum(root_table) must equal (-1)
+        }
+        "test for minimum: check min in a nonroot table with multiple elements" in {
 
         }
 

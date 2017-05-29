@@ -1,13 +1,18 @@
-import Monoid.Monoid
+import Monoid.{IntAddition, Monoid}
 import akka.actor.ActorRef
+import akka.testkit.TestActorRef
 
 class GAPUtil[A] (monoid: Monoid[A]) {
   def new_entry(newActor:ActorRef, isRoot:Boolean, table:Map[ActorRef, Tuple3[The_Status, Int, A]]) =
   {
     if(isRoot && table.isEmpty)
     {
+      val monoid = new IntAddition
       val addTuple:Tuple3[The_Status, Int, A] = Tuple3(Par(), -1, 0.asInstanceOf[A])
       var new_table = table + (newActor -> addTuple)
+      val secondAdd:ActorRef = TestActorRef(new GAPNode[Int](monoid))
+      val addSecond:Tuple3[The_Status, Int, A] = Tuple3(Self(), 0, 0.asInstanceOf[A])
+      new_table = new_table + (secondAdd -> addSecond)
       new_table
     }
     else if(table.isEmpty)
@@ -31,11 +36,15 @@ class GAPUtil[A] (monoid: Monoid[A]) {
 
   // gets the level of the actor
   def getLevel(curr_actor:ActorRef, table:Map[ActorRef, Tuple3[The_Status, Int, A]]):Int = {
+    if(table.size < 2)
+      return null
     get_minimum(table) + 1
   }
 
   // gets the actor's parent
   def getParent(table:Map[ActorRef, Tuple3[The_Status, Int, A]]):ActorRef = {
+    if(table.size < 2)
+      return null
     for(value <- table.keys)
     {
       if(table.get(value).get._1 == Par())
