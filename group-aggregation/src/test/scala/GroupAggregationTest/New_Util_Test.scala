@@ -17,6 +17,7 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
     "The GAPUtil test cases" must {
         val monoid = new IntAddition
         val utils_use:GAPUtil[Int] = new GAPUtil(monoid:Monoid[Int])
+        val helpers_use:GAPHelper[Int] = new GAPHelper(monoid:Monoid[Int])
         // test with four nodes and make sure everything works
         val root_node = TestActorRef(new GAPNode[Int](monoid))
         val node_one = TestActorRef(new GAPNode[Int](monoid))
@@ -166,18 +167,18 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
         // minimum tests
         "test for minimum: check min in table with 1 element" in {
           one_table = utils_use.new_entry(node_one, false, one_table)
-          utils_use.get_minimum(one_table) must equal (0)
+          helpers_use.get_minimum(one_table) must equal (0)
         }
         "test for minimum: check min in new root table with 2 elements" in {
           root_table = utils_use.new_entry(root_node, true, root_table)
-          utils_use.get_minimum(root_table) must equal (-1)
+          helpers_use.get_minimum(root_table) must equal (-1)
         }
         "test for minimum: check min in a root table with multiple elements" in {
           root_table = utils_use.new_entry(root_node, true, root_table)
           root_table = utils_use.new_entry(node_one, true, root_table)
           root_table = utils_use.new_entry(node_two, true, root_table)
           root_table = utils_use.new_entry(node_three, true, root_table)
-          utils_use.get_minimum(root_table) must equal (-1)
+          helpers_use.get_minimum(root_table) must equal (-1)
         }
         "test for minimum: check min in a nonroot table with multiple elements" in {
 
