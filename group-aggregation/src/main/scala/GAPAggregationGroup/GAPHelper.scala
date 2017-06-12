@@ -4,15 +4,22 @@ import akka.actor.ActorRef
 // a set of helper functions..
 class GAPHelper [A] (monoid: Monoid[A]) {
   // gets the minimum value in a table
-  def get_minimum(table:Map[ActorRef, Table_Info[A]]): Int = {
+  def get_minimum(table:Map[ActorRef, Table_Info[A]]): Option[Int] = {
     var minimum:Int = Int.MaxValue
+    var count_none:Int = 0
     for(value <- table.keys)
     {
-      var curr_min:Int = table.get(value).get._2
-      if(curr_min < minimum)
-        minimum = curr_min
+      var curr_min:Option[Int] = table.get(value).get.get_level()
+      curr_min match {
+        case Some(value) => if(value < minimum)
+                              minimum = value
+        case None => count_none += 1
+      }
     }
-    minimum
+    if(count_none == table.size)
+      return None
+    else
+      Some(minimum)
   }
 
   // this handles a table with only one row - makes sure that the only type class is self(), and if not, fixes that
@@ -34,7 +41,7 @@ class GAPHelper [A] (monoid: Monoid[A]) {
 
   // a helper function which makes sure the parent has minimum level in the table
   def parent_min_val(table:Map[ActorRef, Table_Info[A]]):Map[ActorRef, Table_Info[A]] = {
-    var minimum:Int = get_minimum(table)
+    var minimum:Option[Int] = get_minimum(table)
 
     for(value <- table.keys)
     {
