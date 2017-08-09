@@ -45,16 +45,20 @@ class GAPHelper [A] (monoid: Monoid[A]) {
 
     for(value <- table.keys)
     {
-      if(table.get(value).get.get_level().get == minimum)
+      if(table.get(value).get.get_level() == None)
       {
-        // now we are at what should be the parent
-        val the_weight:A = table.get(value).get.get_weight()
-        if(table.get(value).get.get_status() != Par())
-        {
-          // then make this have a status of parent
-          val addEntry: Table_Info[A] = new Table_Info[A](Par(), Some(minimum), the_weight)
-          var new_table = table + (value -> addEntry)
-          return new_table
+        // do nothing
+      }
+      else {
+        if (table.get(value).get.get_level().get == minimum) {
+          // now we are at what should be the parent
+          val the_weight: A = table.get(value).get.get_weight()
+          if (table.get(value).get.get_status() != Par()) {
+            // then make this have a status of parent
+            val addEntry: Table_Info[A] = new Table_Info[A](Par(), minimum, the_weight)
+            var new_table = table + (value -> addEntry)
+            return new_table
+          }
         }
       }
     }
@@ -63,14 +67,14 @@ class GAPHelper [A] (monoid: Monoid[A]) {
 
   // a helper function which makes sure that the level (minimum + 1) element has status self()
   def handle_self_level(table:Map[ActorRef, Table_Info[A]]):Map[ActorRef, Table_Info[A]]  = {
-    var minimum:Int = get_minimum(table)
+    var minimum:Option[Int] = get_minimum(table)
     var cond_two_satisfied:Boolean = false
     for(value <- table.keys)
     {
       if(table.get(value).get.get_status() == Self())
       {
         val curr_level:Int = table.get(value).get.get_level().get
-        if(curr_level == minimum + 1)
+        if(curr_level == minimum.get + 1)
           cond_two_satisfied = true
       }
     }
@@ -80,10 +84,10 @@ class GAPHelper [A] (monoid: Monoid[A]) {
     {
       for(value <- table.keys)
       {
-        if(table.get(value).get.get_level().get == minimum + 1)
+        if(table.get(value).get.get_level().get == minimum.get + 1)
         {
           val the_weight:A = table.get(value).get.get_weight()
-          val addEntry: Table_Info[A] = new Table_Info[A](Self(), Some(minimum + 1), the_weight)
+          val addEntry: Table_Info[A] = new Table_Info[A](Self(), Some(minimum.get + 1), the_weight)
           var new_table = table + (value -> addEntry)
           return new_table
         }
@@ -94,14 +98,14 @@ class GAPHelper [A] (monoid: Monoid[A]) {
 
   // makes sure only one parent exists, and if more than one does, replace the other one with an appropriate status
   def confirm_one_parent(table:Map[ActorRef, Table_Info[A]]):Map[ActorRef, Table_Info[A]] = {
-    var minimum:Int = get_minimum(table)
+    var minimum:Option[Int] = get_minimum(table)
     var new_table = table
     for(value <- table.keys)
     {
       if(table.get(value).get.get_status() == Par())
       {
         // now check the level. if the level is the minimum, then its good.. otherwise an appropriate switch is necessary
-        if(table.get(value).get.get_level().get != minimum)
+        if(table.get(value).get.get_level().get != minimum.get)
         {
           new_table = switch_element(value, new_table)
         }
@@ -113,14 +117,14 @@ class GAPHelper [A] (monoid: Monoid[A]) {
 
   // makes sure only one self exists, and if more than one does, replace the other ones with appropriate status
   def confirm_one_self(table:Map[ActorRef, Table_Info[A]]):Map[ActorRef, Table_Info[A]] = {
-    var minimum:Int = get_minimum(table)
+    var minimum:Option[Int] = get_minimum(table)
     var new_table = table
     for(value <- table.keys)
     {
       if(table.get(value).get.get_status() == Self())
       {
         // check the level and see if it = minimum + 1. make an appropriate switch if it does not
-        if(table.get(value).get.get_level().get != (minimum + 1))
+        if(table.get(value).get.get_level().get != (minimum.get + 1))
         {
           new_table = switch_element(value, new_table)
         }

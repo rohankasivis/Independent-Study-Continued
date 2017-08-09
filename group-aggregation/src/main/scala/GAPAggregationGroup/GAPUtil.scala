@@ -4,27 +4,26 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 class GAPUtil[A] (monoid: Monoid[A]) {
   var use_helpers:GAPHelper[A] = new GAPHelper(monoid:Monoid[A])
 
-  def new_entry(newActor:ActorRef, isRoot:Boolean, table:Map[ActorRef, Table_Info[A]]):Map[ActorRef, Table_Info[A]] =
+  def new_entry(newActor:ActorRef, secondActor:ActorRef, isRoot:Boolean, table:Map[ActorRef, Table_Info[A]]):Map[ActorRef, Table_Info[A]] =
   {
     if(isRoot && table.isEmpty)
     {
       val addTuple:Table_Info[A] = new Table_Info[A](Par(), Some(0), monoid.id)
       var new_table = table + (newActor -> addTuple)
-      val secondActor:ActorRef = ActorSystem("curr_system").actorOf(Props(new GAPNode[A](monoid)), name="root_node")
       val addSecond:Table_Info[A] = new Table_Info[A](Self(), Some(1), monoid.id)
       new_table = new_table + (secondActor -> addSecond)
       new_table
     }
     else if(table.isEmpty)
     {
-      val addTuple:Table_Info[A] = new Table_Info[A](Self(), None, monoid.id)
+      val addTuple:Table_Info[A] = new Table_Info[A](Self(), Some(1), monoid.id)
       var new_table = table + (newActor -> addTuple)
       new_table
     }
     else
     {
       table.get(newActor) match {
-        case Some((curr_string, level, weight)) =>
+        case Some(table_Info) =>
           table   // return the original table simply, no modification made
         case None =>
           val adder:Table_Info[A] = new Table_Info[A](Peer(), None, monoid.id)
@@ -38,7 +37,7 @@ class GAPUtil[A] (monoid: Monoid[A]) {
   def getLevel(table:Map[ActorRef, Table_Info[A]]):Option[Int] = {
     if(table.size < 2)
       return None
-    Some(use_helpers.get_minimum(table) + 1)
+    Some(use_helpers.get_minimum(table).get + 1)
   }
 
   // gets the actor's parent
@@ -48,6 +47,15 @@ class GAPUtil[A] (monoid: Monoid[A]) {
     for(value <- table.keys)
     {
       if(table.get(value).get.get_status() == Par())
+        return Some(value)
+    }
+    None
+  }
+
+  // get's the actor's self value
+  def getSelf(table:Map[ActorRef, Table_Info[A]]):Option[ActorRef] = {
+    for(value <- table.keys) {
+      if (table.get(value).get.get_status() == Self())
         return Some(value)
     }
     None
@@ -63,9 +71,9 @@ class GAPUtil[A] (monoid: Monoid[A]) {
     }
   }
 
-  def update_entry(updateActor:ActorRef, weight:A, level:Int, parent:ActorRef, table:Map[ActorRef, Table_Info[A]]):Map[ActorRef, Table_Info[A]] = {
+  def update_entry(updateActor:ActorRef, secondActor:ActorRef, weight:A, level:Int, parent:ActorRef, table:Map[ActorRef, Table_Info[A]]):Map[ActorRef, Table_Info[A]] = {
     if(table.get(updateActor).isEmpty)
-      new_entry(updateActor, false, table)
+      new_entry(updateActor, secondActor, false, table)
     else {
       if(table.get(parent).get.get_status() == Self())
       {
