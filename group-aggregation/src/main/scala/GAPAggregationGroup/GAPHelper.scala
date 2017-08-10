@@ -42,7 +42,6 @@ class GAPHelper [A] (monoid: Monoid[A]) {
   // a helper function which makes sure the parent has minimum level in the table
   def parent_min_val(table:Map[ActorRef, Table_Info[A]]):Map[ActorRef, Table_Info[A]] = {
     var minimum:Option[Int] = get_minimum(table)
-
     for(value <- table.keys)
     {
       if(table.get(value).get.get_level() == None)
@@ -50,7 +49,7 @@ class GAPHelper [A] (monoid: Monoid[A]) {
         // do nothing
       }
       else {
-        if (table.get(value).get.get_level().get == minimum) {
+        if (table.get(value).get.get_level().get == minimum.get) {
           // now we are at what should be the parent
           val the_weight: A = table.get(value).get.get_weight()
           if (table.get(value).get.get_status() != Par()) {
