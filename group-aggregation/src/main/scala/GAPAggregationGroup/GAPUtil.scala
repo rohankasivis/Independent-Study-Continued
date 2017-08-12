@@ -71,6 +71,40 @@ class GAPUtil[A] (monoid: Monoid[A]) {
     }
   }
 
+  // make sure everything is satisfied - helper function for testing purposes
+  def everything_works(table:Map[ActorRef, Table_Info[A]]):Boolean = {
+    var count_parent:Int = 0
+    var count_self:Int = 0
+    var parent_level:Int = 0
+    var self_level:Int = 0
+    var helper:GAPHelper[A] = new GAPHelper(monoid:Monoid[A])
+    for(value <- table.keys)
+    {
+        if(table.get(value).get.get_status() == Self())
+          count_self += 1
+        else if(table.get(value).get.get_status() == Par())
+          count_parent += 1
+    }
+
+    if(count_self > 1 || count_parent > 1)
+      return false
+
+    val minimum:Int = helper.get_minimum(table).get
+    for(value <- table.keys)
+    {
+        if(table.get(value).get.get_status() == Self())
+          self_level = table.get(value).get.get_level().get
+        else if(table.get(value).get.get_status() == Par())
+          parent_level = table.get(value).get.get_level().get
+    }
+    if(parent_level != minimum)
+      return false
+    else if(self_level != minimum + 1)
+      return false
+    else
+      return true
+  }
+
   def update_entry(updateActor:ActorRef, secondActor:ActorRef, weight:A, level:Int, parent:ActorRef, table:Map[ActorRef, Table_Info[A]]):Map[ActorRef, Table_Info[A]] = {
     if(table.get(updateActor).isEmpty)
       new_entry(updateActor, secondActor, false, table)
