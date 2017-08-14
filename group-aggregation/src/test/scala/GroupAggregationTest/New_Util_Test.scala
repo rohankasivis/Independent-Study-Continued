@@ -508,40 +508,72 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
         // back to main function: restore_table_invariant
         // all needed tests for this
         "test for restore_table_invariant: table does not need changes (test 1 for root)" in {
-
+            // most basic test for root...
+            root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_one, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_two, root_node_second, true, root_table)
+            utils_use.restore_table_invariant(root_table)
+            val result:Boolean = utils_use.everything_works(root_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does not need changes (test 2 for root)" in {
-
+            // slightly more advanced test for root...
+            utils_use.restore_table_invariant(root_table)
+            val result:Boolean = utils_use.everything_works(root_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does not need changes (test 1 for nonroot)" in {
-
+            one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_three, root_node_second, false, one_table)
+            utils_use.restore_table_invariant(one_table)
+            val result:Boolean = utils_use.everything_works(one_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does not need changes (test 2 for nonroot)" in {
-
+            utils_use.restore_table_invariant(one_table)
+            val result:Boolean = utils_use.everything_works(one_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 1 for root)" in {
-
+            utils_use.restore_table_invariant(root_table)
+            val result:Boolean = utils_use.everything_works(root_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 2 for root)" in {
-
+            utils_use.restore_table_invariant(root_table)
+            val result:Boolean = utils_use.everything_works(root_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 3 for root)" in {
-
+            utils_use.restore_table_invariant(root_table)
+            val result:Boolean = utils_use.everything_works(root_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 4 for root)" in {
-
+            utils_use.restore_table_invariant(root_table)
+            val result:Boolean = utils_use.everything_works(root_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 1 for nonroot)" in {
-
+            utils_use.restore_table_invariant(one_table)
+            val result:Boolean = utils_use.everything_works(one_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 2 for nonroot)" in {
-
+            utils_use.restore_table_invariant(one_table)
+            val result:Boolean = utils_use.everything_works(one_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 3 for nonroot)" in {
-
+            utils_use.restore_table_invariant(one_table)
+            val result:Boolean = utils_use.everything_works(one_table)
+            result must equal (true)
         }
         "test for restore_table_invariant: table does not need changes (test 4 for nonroot)" in {
-
+            utils_use.restore_table_invariant(one_table)
+            val result:Boolean = utils_use.everything_works(one_table)
+            result must equal (true)
         }
     }
 }
