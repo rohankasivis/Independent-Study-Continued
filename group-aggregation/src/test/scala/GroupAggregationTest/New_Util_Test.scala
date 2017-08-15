@@ -476,10 +476,22 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             count must equal (1)
         }
         "test for confirm_one_self: more than one self exists (test 1: in root)" in {
-
+            // must fix this
+            one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
+            one_table = utils_use.update_entry(node_two, root_node_second, 30, 2, node_one, one_table)
+            one_table.size must equal(2)
+            one_table.get(node_one).get.get_status() must equal(Self())
+            one_table.get(node_two).get.get_status() must equal(Child())
         }
         "test for confirm_one_self: more than one self exists (test 2: in root)" in {
-
+            // must fix this
+            one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
+            one_table = utils_use.update_entry(node_two, root_node_second, 30, 2, node_one, one_table)
+            one_table.size must equal(2)
+            one_table.get(node_one).get.get_status() must equal(Self())
+            one_table.get(node_two).get.get_status() must equal(Child())
         }
         "test for confirm_one_self: more than one self exists (test 3: in root)" in {
             root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
@@ -499,10 +511,22 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             root_table.get(root_node).get.get_status() must equal (Self())
         }
         "test for confirm_one_self: more than one self exists (test 2: in nonroot)" in {
-
+            // must fix this
+            one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
+            one_table = utils_use.update_entry(node_two, root_node_second, 30, 2, node_one, one_table)
+            one_table.size must equal(2)
+            one_table.get(node_one).get.get_status() must equal(Self())
+            one_table.get(node_two).get.get_status() must equal(Child())
         }
         "test for confirm_one_self: more than one self exists (test 3: in nonroot)" in {
-
+            // must fix this
+            one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
+            one_table = utils_use.update_entry(node_two, root_node_second, 30, 2, node_one, one_table)
+            one_table.size must equal(2)
+            one_table.get(node_one).get.get_status() must equal(Self())
+            one_table.get(node_two).get.get_status() must equal(Child())
         }
 
         // back to main function: restore_table_invariant
@@ -536,41 +560,92 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 1 for root)" in {
+            one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
+            one_table = utils_use.update_entry(node_two, root_node_second, 30, 2, node_one, one_table)
+            one_table.size must equal(2)
+            one_table.get(node_one).get.get_status() must equal(Self())
+            one_table.get(node_two).get.get_status() must equal(Child())
             utils_use.restore_table_invariant(root_table)
             val result:Boolean = utils_use.everything_works(root_table)
             result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 2 for root)" in {
+            one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
+            one_table = utils_use.update_entry(node_two, root_node_second, 30, 2, node_one, one_table)
+            one_table.size must equal(2)
+            one_table.get(node_one).get.get_status() must equal(Self())
+            one_table.get(node_two).get.get_status() must equal(Child())
             utils_use.restore_table_invariant(root_table)
             val result:Boolean = utils_use.everything_works(root_table)
             result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 3 for root)" in {
+            root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
+            root_table = utils_use.remove_entry(root_node_second, root_table)
+            root_table = helpers_use.handle_single_row_table(root_table)
+            root_table.size must equal(1)
+            root_table.get(root_node).get.get_status() must equal (Self())
             utils_use.restore_table_invariant(root_table)
             val result:Boolean = utils_use.everything_works(root_table)
             result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 4 for root)" in {
+            root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
+            root_table = utils_use.remove_entry(root_node_second, root_table)
+            root_table = helpers_use.handle_single_row_table(root_table)
+            root_table.size must equal(1)
+            root_table.get(root_node).get.get_status() must equal (Self())
             utils_use.restore_table_invariant(root_table)
             val result:Boolean = utils_use.everything_works(root_table)
             result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 1 for nonroot)" in {
+            root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
+            root_table = utils_use.remove_entry(root_node_second, root_table)
+            root_table = helpers_use.handle_single_row_table(root_table)
+            root_table.size must equal(1)
+            root_table.get(root_node).get.get_status() must equal (Self())
             utils_use.restore_table_invariant(one_table)
             val result:Boolean = utils_use.everything_works(one_table)
             result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 2 for nonroot)" in {
+            root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_one, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_two, root_node_second, true, root_table)
+            root_table = helpers_use.parent_min_val(root_table)
+            root_table.size must equal (4)
+            val minimum:Int = helpers_use.get_minimum(root_table).get
+            val parent:ActorRef = utils_use.getParent(root_table).get
+            root_table.get(parent).get.get_level().get must equal (minimum)
             utils_use.restore_table_invariant(one_table)
             val result:Boolean = utils_use.everything_works(one_table)
             result must equal (true)
         }
         "test for restore_table_invariant: table does need changes (test 3 for nonroot)" in {
+            root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_one, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_two, root_node_second, true, root_table)
+            root_table = helpers_use.parent_min_val(root_table)
+            root_table.size must equal (4)
+            val minimum:Int = helpers_use.get_minimum(root_table).get
+            val parent:ActorRef = utils_use.getParent(root_table).get
+            root_table.get(parent).get.get_level().get must equal (minimum)
             utils_use.restore_table_invariant(one_table)
             val result:Boolean = utils_use.everything_works(one_table)
             result must equal (true)
         }
         "test for restore_table_invariant: table does not need changes (test 4 for nonroot)" in {
+            root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_one, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_two, root_node_second, true, root_table)
+            root_table = helpers_use.parent_min_val(root_table)
+            root_table.size must equal (4)
+            val minimum:Int = helpers_use.get_minimum(root_table).get
+            val parent:ActorRef = utils_use.getParent(root_table).get
+            root_table.get(parent).get.get_level().get must equal (minimum)
             utils_use.restore_table_invariant(one_table)
             val result:Boolean = utils_use.everything_works(one_table)
             result must equal (true)
