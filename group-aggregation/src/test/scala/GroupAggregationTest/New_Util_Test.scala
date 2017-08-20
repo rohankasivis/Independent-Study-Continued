@@ -311,6 +311,29 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             val parent:ActorRef = utils_use.getParent(one_table).get
             one_table.get(parent).get.get_level().get must equal (minimum)
         }
+        "test for parent_min_val: check within tables that do not have parents (in root)" in {
+            root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_one, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_two, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_three, root_node_second, true, root_table)
+            root_table = utils_use.setStatus(root_table, node_three, Self())
+            root_table = utils_use.update_entry(root_node, root_node_second, 10, 0, node_three, root_table)
+            root_table = helpers_use.parent_min_val(root_table)
+            val minimum:Int = helpers_use.get_minimum(root_table).get
+            val parent:ActorRef = utils_use.getParent(root_table).get
+            root_table.get(parent).get.get_level().get must equal (minimum)
+        }
+        "test for parent_min_val: check within tables that do not have parents (in nonroot)" in {
+            one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_three, root_node_second, false, one_table)
+            one_table = utils_use.setStatus(one_table, node_three, Self())
+            one_table = utils_use.update_entry(node_two, root_node_second, 10, 0, node_three, one_table)
+            one_table = helpers_use.parent_min_val(one_table)
+            val minimum:Int = helpers_use.get_minimum(one_table).get
+            val parent:ActorRef = utils_use.getParent(one_table).get
+            one_table.get(parent).get.get_level().get must equal (minimum)
+        }
 
         // handle self level tests
         "test for handle_self_level: check for self status in a table where minimum + 1 level element has status self (in root) " in {
@@ -335,51 +358,78 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             one_table.get(self).get.get_level().get must equal (minimum + 1)
         }
         "test for handle_self_level: check for self status in a table where minimum + 1 does not have self (in root: test 1)" in {
-            // FAILED
             root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
             root_table = utils_use.new_entry(node_one, root_node_second, true, root_table)
             root_table = utils_use.new_entry(node_two, root_node_second, true, root_table)
             root_table = utils_use.new_entry(node_three, root_node_second, true, root_table)
-            root_table = utils_use.update_entry(root_node_second, root_node_second, 10, 2, node_one, root_table)
             root_table = utils_use.setStatus(root_table, node_three, Self())
+            root_table = utils_use.update_entry(root_node_second, root_node_second, 10, 1, node_three, root_table)
+            root_table = helpers_use.handle_self_level(root_table)
             val minimum:Int = helpers_use.get_minimum(root_table).get
             val self:ActorRef = utils_use.getSelf(root_table).get
             root_table.get(self).get.get_level().get must equal (minimum + 1)
         }
         "test for handle_self_level: check for self status in a table where minimum + 1 does not have self (in root: test 2)" in {
-            // FAILED
             root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
             root_table = utils_use.new_entry(node_one, root_node_second, true, root_table)
             root_table = utils_use.new_entry(node_two, root_node_second, true, root_table)
             root_table = utils_use.new_entry(node_three, root_node_second, true, root_table)
-            root_table = utils_use.update_entry(node_one, root_node_second, 10, 3, root_node_second, root_table)
-            root_table = utils_use.update_entry(root_node_second, root_node_second, 10, 2, node_two, root_table)
-            root_table = utils_use.setStatus(root_table, node_one, Self())
+            root_table = utils_use.update_entry(node_one, root_node_second, 10, 2, root_node_second, root_table)
             root_table = utils_use.setStatus(root_table, node_three, Self())
+            root_table = utils_use.update_entry(root_node_second, root_node_second, 10, 1, node_three, root_table)
+            root_table = utils_use.setStatus(root_table, node_one, Self())
+            root_table = helpers_use.handle_self_level(root_table)
+            root_table = helpers_use.confirm_one_self(root_table)
             val minimum:Int = helpers_use.get_minimum(root_table).get
             val self:ActorRef = utils_use.getSelf(root_table).get
             root_table.get(self).get.get_level().get must equal (minimum + 1)
         }
         "test for handle_self_level: check for self status in a table where minimum + 1 does not have self (in nonroot: test 1)" in {
-            // FAILED
             one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
             one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
             one_table = utils_use.new_entry(node_three, root_node_second, false, one_table)
-            one_table = utils_use.update_entry(node_one, root_node_second, 10, 2, node_three, one_table)
+            one_table = utils_use.update_entry(node_two, root_node_second, 10, 2, node_three, one_table)
             one_table = utils_use.setStatus(one_table, node_three, Self())
+            one_table = helpers_use.handle_self_level(one_table)
+            one_table = helpers_use.confirm_one_self(one_table)
             val minimum:Int = helpers_use.get_minimum(one_table).get
             val self:ActorRef = utils_use.getSelf(one_table).get
             one_table.get(self).get.get_level().get must equal (minimum + 1)
         }
         "test for handle_self_level: check for self status in a table where minimum + 1 does not have self (in nonroot: test 2)" in {
-            // FAILED
             one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
             one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
             one_table = utils_use.new_entry(node_three, root_node_second, false, one_table)
             one_table = utils_use.update_entry(node_two, root_node_second, 10, 3, node_one, one_table)
+            one_table = utils_use.setStatus(one_table, node_three, Self())
             one_table = utils_use.update_entry(node_one, root_node_second, 10, 2, node_three, one_table)
             one_table = utils_use.setStatus(one_table, node_two, Self())
-            one_table = utils_use.setStatus(one_table, node_three, Self())
+            one_table = helpers_use.handle_self_level(one_table)
+            one_table = helpers_use.confirm_one_self(one_table)
+            val minimum:Int = helpers_use.get_minimum(one_table).get
+            val self:ActorRef = utils_use.getSelf(one_table).get
+            one_table.get(self).get.get_level().get must equal (minimum + 1)
+        }
+        "test for handle_self_level: check for self status in table which has no self (in root)" in {
+            root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_one, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_two, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_three, root_node_second, true, root_table)
+            root_table = utils_use.update_entry(node_one, root_node_second, 10, 1, node_three, root_table)
+            root_table = utils_use.remove_entry(root_node_second, root_table)
+            root_table = helpers_use.handle_self_level(root_table)
+            val minimum:Int = helpers_use.get_minimum(root_table).get
+            val self:ActorRef = utils_use.getSelf(root_table).get
+            root_table.get(self).get.get_level().get must equal (minimum + 1)
+        }
+        "test for handle_self_level: check for self status in table which has no self (in nonroot)" in {
+            one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
+            one_table = utils_use.new_entry(node_three, root_node_second, false, one_table)
+            one_table = utils_use.remove_entry(node_one, one_table)
+            one_table = utils_use.update_entry(node_two, root_node_second, 10, 0, node_three, one_table)
+            one_table = utils_use.update_entry(node_three, root_node_second, 10, 1, node_two, one_table)
+            one_table = helpers_use.handle_self_level(one_table)
             val minimum:Int = helpers_use.get_minimum(one_table).get
             val self:ActorRef = utils_use.getSelf(one_table).get
             one_table.get(self).get.get_level().get must equal (minimum + 1)
@@ -458,12 +508,11 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
         }
         "test for confirm_one_parent: no parent exists (in nonroot)" in {
             // no need to add more than this because parent_min_val tests for this
-            // FAILED
             one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
             one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
             one_table = utils_use.new_entry(node_three, root_node_second, false, one_table)
             one_table = helpers_use.confirm_one_parent(one_table)
-            val count:Int = utils_use.getNumParent(root_table)
+            val count:Int = utils_use.getNumParent(one_table)
             count must equal (1)
         }
 
@@ -478,13 +527,12 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             count must equal (1)
         }
         "test for confirm_one_self: only one self already exists (in nonroot) " in {
-            // FAILED
             one_table = utils_use.new_entry(node_one, root_node_second, false, one_table)
             one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
             one_table = utils_use.new_entry(node_three, root_node_second, false, one_table)
             one_table = helpers_use.confirm_one_self(one_table)
             one_table.size must equal (3)
-            val count:Int = utils_use.getNumSelf(root_table)
+            val count:Int = utils_use.getNumSelf(one_table)
             count must equal (1)
         }
         "test for confirm_one_self: more than one self exists (test 1: in root)" in {
@@ -519,7 +567,7 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             one_table = utils_use.setStatus(one_table, node_two, Self())
             one_table = utils_use.setStatus(one_table, node_three, Self())
             val count:Int = utils_use.getNumSelf(one_table)
-            count must equal(2)
+            count must equal(3)
             one_table = helpers_use.confirm_one_self(one_table)
             val second_count:Int = utils_use.getNumSelf(one_table)
             second_count must equal(1)
@@ -533,7 +581,7 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             one_table = utils_use.setStatus(one_table, node_one, Self())
             one_table = utils_use.setStatus(one_table, node_two, Self())
             val count:Int = utils_use.getNumSelf(one_table)
-            count must equal(2)
+            count must equal(3)
             one_table = helpers_use.confirm_one_self(one_table)
             val second_count:Int = utils_use.getNumSelf(one_table)
             second_count must equal(1)
@@ -543,6 +591,8 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             root_table = utils_use.new_entry(root_node, root_node_second, true, root_table)
             root_table = utils_use.new_entry(node_one, root_node_second, true, root_table)
             root_table = utils_use.new_entry(node_two, root_node_second, true, root_table)
+            root_table = utils_use.new_entry(node_three, root_node_second, true, root_table)
+            root_table = utils_use.update_entry(node_one, root_node_second, 10, 1, node_three, root_table)
             root_table = utils_use.remove_entry(root_node_second, root_table)
             root_table = helpers_use.confirm_one_self(root_table)
             val count:Int = utils_use.getNumSelf(root_table)
@@ -554,8 +604,10 @@ class New_Util_Test extends TestKit(ActorSystem("testSystem"))
             one_table = utils_use.new_entry(node_two, root_node_second, false, one_table)
             one_table = utils_use.new_entry(node_three, root_node_second, false, one_table)
             one_table = utils_use.remove_entry(node_one, one_table)
+            one_table = utils_use.update_entry(node_two, root_node_second, 10, 0, node_three, one_table)
+            one_table = utils_use.update_entry(node_three, root_node_second, 10, 1, node_two, one_table)
             one_table = helpers_use.confirm_one_self(one_table)
-            val count:Int = utils_use.getNumSelf(root_table)
+            val count:Int = utils_use.getNumSelf(one_table)
             count must equal (1)
         }
 

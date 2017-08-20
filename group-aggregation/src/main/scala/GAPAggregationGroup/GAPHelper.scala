@@ -72,9 +72,15 @@ class GAPHelper [A] (monoid: Monoid[A]) {
     {
       if(table.get(value).get.get_status() == Self())
       {
-        val curr_level:Int = table.get(value).get.get_level().get
-        if(curr_level == minimum.get + 1)
-          cond_two_satisfied = true
+        if(table.get(value).get.get_level() == None)
+        {
+          // do nothing
+        }
+        else {
+          val curr_level: Int = table.get(value).get.get_level().get
+          if (curr_level == minimum.get + 1)
+            cond_two_satisfied = true
+        }
       }
     }
 
@@ -139,10 +145,12 @@ class GAPHelper [A] (monoid: Monoid[A]) {
       if(table.get(value).get.get_status() == Self())
         count += 1
     }
-    if(count == 0)
+    if(count == 0) {
       handle_self_level(new_table)
-    else if(count == 1)
+    }
+    else if(count == 1) {
       new_table
+    }
     else {
       for (value <- table.keys) {
         if (table.get(value).get.get_status() == Self()) {
