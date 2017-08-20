@@ -33,6 +33,33 @@ class GAPUtil[A] (monoid: Monoid[A]) {
     }
   }
 
+  // util function added for testing purposes to make things easier
+  def setStatus(table:Map[ActorRef, Table_Info[A]], modify_actor:ActorRef, new_status:The_Status):Map[ActorRef, Table_Info[A]] = {
+    val adder:Table_Info[A] = new Table_Info[A](new_status, table.get(modify_actor).get.get_level(), table.get(modify_actor).get.get_weight())
+    var new_table = table + (modify_actor -> adder)
+    new_table
+  }
+
+  def getNumParent(table:Map[ActorRef, Table_Info[A]]):Int = {
+    var count:Int = 0
+    for(value <- table.keys)
+    {
+      if(table.get(value).get.get_status() == Par())
+        count += 1
+    }
+    count
+  }
+
+  def getNumSelf(table:Map[ActorRef, Table_Info[A]]):Int = {
+    var count:Int = 0
+    for(value <- table.keys)
+    {
+      if(table.get(value).get.get_status() == Self())
+        count += 1
+    }
+    count
+  }
+
   // gets the level of the actor
   def getLevel(table:Map[ActorRef, Table_Info[A]]):Option[Int] = {
     if(table.size < 2)
