@@ -92,12 +92,12 @@ class GAPHelper [A] (monoid: Monoid[A]) {
           if (table.get(value).get.get_level().get == minimum.get) {
             // now we are at what should be the parent
             val the_weight: A = table.get(value).get.get_weight()
-            if (table.get(value).get.get_status() != Par()) {
-              // then make this have a status of parent
-              val addEntry: Table_Info[A] = new Table_Info[A](Par(), minimum, the_weight)
-              var new_table = table + (value -> addEntry)
-              return new_table
-            }
+              if (table.get(value).get.get_status() != Par()) {
+                // then make this have a status of parent
+                val addEntry: Table_Info[A] = new Table_Info[A](Par(), minimum, the_weight)
+                var new_table = table + (value -> addEntry)
+                return new_table
+              }
           }
         }
       }
@@ -205,6 +205,7 @@ class GAPHelper [A] (monoid: Monoid[A]) {
     var minimum:Option[Int] = get_minimum(table)
     var new_table = table
     var count:Int = 0
+    var minimumChecked:Boolean = false
     for(value <- table.keys)
     {
       if(table.get(value).get.get_status() == Par())
@@ -218,8 +219,12 @@ class GAPHelper [A] (monoid: Monoid[A]) {
       for (value <- table.keys) {
         if (table.get(value).get.get_status() == Par()) {
           // now check the level. if the level is the minimum, then its good.. otherwise an appropriate switch is necessary
-          if (table.get(value).get.get_level() == None || table.get(value).get.get_level().get != minimum.get) {
+          if (table.get(value).get.get_level() == None || table.get(value).get.get_level().get != minimum.get || minimumChecked) {
             new_table = switch_element(value, new_table)
+          }
+          else
+          {
+            minimumChecked = true
           }
         }
       }
