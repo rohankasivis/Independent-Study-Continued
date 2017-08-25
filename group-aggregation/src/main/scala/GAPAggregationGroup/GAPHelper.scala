@@ -162,40 +162,97 @@ class GAPHelper [A] (monoid: Monoid[A]) {
     }
     else
     {
-      // check for case in which no minimum + 1 element exists
-      // - check to see if a self exists - if so, change its level to minimum + 1
-      // - if no self exists - if there is a null element, replace it with self, otherwise change a peer element to self and modify its level
-      var cond_two_satisfied: Boolean = false
-      for (value <- table.keys) {
-        if (table.get(value).get.get_status() == Self()) {
-          if (table.get(value).get.get_level() == None) {
-            // do nothing
-          }
-          else {
-            val curr_level: Int = table.get(value).get.get_level().get
-            if (curr_level == minimum.get + 1)
-              cond_two_satisfied = true
-          }
+      var minPlusOneExists:Boolean = false
+      for(value <- table.keys)
+      {
+        if(table.get(value).get.get_level() != None && table.get(value).get.get_level() == minimum.get + 1)
+        {
+          minPlusOneExists = true
         }
       }
-
-      // if cond_two is not satisfied, find minimum + 1 level in the table and make that self
-      if (!cond_two_satisfied) {
+      if(minPlusOneExists) {
+        var cond_two_satisfied: Boolean = false
         for (value <- table.keys) {
-          if (table.get(value).get.get_level() == None) {
-            // do nothing
+          if (table.get(value).get.get_status() == Self()) {
+            if (table.get(value).get.get_level() == None) {
+              // do nothing
+            }
+            else {
+              val curr_level: Int = table.get(value).get.get_level().get
+              if (curr_level == minimum.get + 1)
+                cond_two_satisfied = true
+            }
           }
-          else {
-            if (table.get(value).get.get_level().get == minimum.get + 1) {
+        }
+
+        // if cond_two is not satisfied, find minimum + 1 level in the table and make that self
+        if (!cond_two_satisfied) {
+          for (value <- table.keys) {
+            if (table.get(value).get.get_level() == None) {
+              // do nothing
+            }
+            else {
+              if (table.get(value).get.get_level().get == minimum.get + 1) {
+                val the_weight: A = table.get(value).get.get_weight()
+                val addEntry: Table_Info[A] = new Table_Info[A](Self(), Some(minimum.get + 1), the_weight)
+                var new_table = table + (value -> addEntry)
+                return new_table
+              }
+            }
+          }
+        }
+        table
+      }
+      else
+      {
+        // - check to see if a self exists
+        var num_self:Int = 0
+        for(value <- table.keys)
+        {
+          if(table.get(value).get.get_status() == Self())
+            num_self += 1
+        }
+        if(num_self != 0)
+        {
+          // change its level to minimum + 1
+          for(value <- table.keys)
+          {
+            if(table.get(value).get.get_status() == Self())
+            {
               val the_weight: A = table.get(value).get.get_weight()
               val addEntry: Table_Info[A] = new Table_Info[A](Self(), Some(minimum.get + 1), the_weight)
               var new_table = table + (value -> addEntry)
               return new_table
             }
           }
+          table
+        }
+        else {
+          // - if no self exists - if there is a null element, replace it with self, otherwise change a peer element to self and modify its level
+          for(value <- table.keys)
+          {
+            if(table.get(value).get.get_level() == None)
+            {
+              val the_weight: A = table.get(value).get.get_weight()
+              val addEntry: Table_Info[A] = new Table_Info[A](Self(), Some(minimum.get + 1), the_weight)
+              var new_table = table + (value -> addEntry)
+              return new_table
+            }
+          }
+
+          for(value <- table.keys)
+          {
+            if(table.get(value).get.get_status() != Par())
+            {
+              val the_weight: A = table.get(value).get.get_weight()
+              val addEntry: Table_Info[A] = new Table_Info[A](Self(), Some(minimum.get + 1), the_weight)
+              var new_table = table + (value -> addEntry)
+              return new_table
+            }
+          }
+          table
         }
       }
-      table
     }
   }
 
@@ -238,13 +295,13 @@ class GAPHelper [A] (monoid: Monoid[A]) {
     var minimum:Option[Int] = get_minimum(table)
     var new_table = table
     var count:Int = 0
+    var checked:Boolean = false
     for(value <- table.keys)
     {
       if(table.get(value).get.get_status() == Self())
         count += 1
     }
     if(count == 0) {
-      println("Here")
       handle_self_level(new_table)
     }
     else if(count == 1) {
@@ -254,9 +311,11 @@ class GAPHelper [A] (monoid: Monoid[A]) {
       for (value <- table.keys) {
         if (table.get(value).get.get_status() == Self()) {
           // check the level and see if it = minimum + 1. make an appropriate switch if it does not
-          if (table.get(value).get.get_level() == None || table.get(value).get.get_level().get != (minimum.get + 1)) {
+          if (table.get(value).get.get_level() == None || table.get(value).get.get_level().get != (minimum.get + 1) || checked) {
             new_table = switch_element(value, new_table)
           }
+          else
+            checked = true
         }
       }
       // return the modified table here

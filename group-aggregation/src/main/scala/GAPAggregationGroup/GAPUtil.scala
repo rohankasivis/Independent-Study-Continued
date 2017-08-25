@@ -40,6 +40,13 @@ class GAPUtil[A] (monoid: Monoid[A]) {
     new_table
   }
 
+  // util function added for testing purposes to make things easier
+  def setLevel(table:Map[ActorRef, Table_Info[A]], modify_actor:ActorRef, new_level:Option[Int]):Map[ActorRef, Table_Info[A]] = {
+    val adder:Table_Info[A] = new Table_Info[A](table.get(modify_actor).get.get_status(), new_level, table.get(modify_actor).get.get_weight())
+    var new_table = table + (modify_actor -> adder)
+    new_table
+  }
+
   def getNumParent(table:Map[ActorRef, Table_Info[A]]):Int = {
     var count:Int = 0
     for(value <- table.keys)
@@ -182,17 +189,14 @@ class GAPUtil[A] (monoid: Monoid[A]) {
       // first - make sure the entry with minimum value has status parent
       var first_table:Map[ActorRef, Table_Info[A]] = use_helpers.parent_min_val(table)
 
-      // next - make sure that the actor with self has level of minimum + 1
-      var second_table:Map[ActorRef, Table_Info[A]] = use_helpers.handle_self_level(first_table)
+      // second - make sure only one parent - if not, then convert the other status to peer/child
+      var second_table:Map[ActorRef, Table_Info[A]] = use_helpers.confirm_one_parent(first_table)
 
-      // third - make sure only one parent - if not, then convert the other status to peer/child
-      var third_table:Map[ActorRef, Table_Info[A]] = use_helpers.confirm_one_parent(second_table)
+      // next - make sure that the actor with self has level of minimum + 1
+      var third_table:Map[ActorRef, Table_Info[A]] = use_helpers.handle_self_level(second_table)
 
       // fourth - make sure only one self - if not, then convert the other status to peer/child
-      var fourth_table:Map[ActorRef, Table_Info[A]] = use_helpers.confirm_one_self(third_table)
-
-      // fifth - make sure that no node occurs more than once
-      var final_table:Map[ActorRef, Table_Info[A]] = use_helpers.confirm_no_repetition(fourth_table)
+      var final_table:Map[ActorRef, Table_Info[A]] = use_helpers.confirm_one_self(third_table)
 
       // return the last table after all modifications have been made
       final_table
